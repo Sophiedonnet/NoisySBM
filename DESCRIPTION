@@ -1,0 +1,27 @@
+Package: NoisySBM
+Title: Inference of a network topology from a one or several noisy versions of the network
+Version: 0.0.0.9000
+Authors@R: 
+    person(given = "Sophie",
+           family = "Donnet",
+           role = c("aut", "cre"),
+           email = "sophie.donnet@inrae.fr",
+           comment = c(ORCID = "0000-0003-4370-7316"))
+          person(given = "Stéphane",
+           family = "Robin",
+           role = c("aut", "cre"),
+           email = "stephane.robin@inrae.fr",
+           comment = c(ORCID = "0000-0003-1045-069X"))
+Description: What the package does (one paragraph).
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.0.2
+Imports: 
+    blockmodels,
+    igraph,
+    ggplot2,
+    mvtnorm
+Suggests: 
+    testthat (>= 2.1.0)

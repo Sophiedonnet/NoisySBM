@@ -87,9 +87,7 @@ rNoisySBM = function(nNodes,
   X1Array <- array(X1, c(nNodes, nNodes, d))
   X0Array <- array(X0, c(nNodes, nNodes, d))
   XArray <- X1Array * GArray + X0Array * (1 - GArray)
-  X <- lapply(1:d, function(i) {
-    XArray[, , i]
-  })
+  X <- lapply(1:d, function(i) {U <- XArray[, , i]; diag(U) <- NA; return(U)})
   if (symmetric){
     where <- upper.tri(G)
     G[where] <- t(G)[where]
@@ -102,7 +100,7 @@ rNoisySBM = function(nNodes,
   res = list(
     trueNetwork = G,
     noisyNetworks = X,
-    memberships = Z
+    memberships = t(Z)
   )
   return(res)
 

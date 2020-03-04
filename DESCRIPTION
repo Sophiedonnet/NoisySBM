@@ -22,6 +22,7 @@ Imports:
     blockmodels,
     igraph,
     ggplot2,
-    mvtnorm
+    mvtnorm,
+    mclust
 Suggests: 
     testthat (>= 2.1.0)

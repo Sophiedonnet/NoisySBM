@@ -3,11 +3,11 @@ VEM_NoisySBM <- function(data, symmetric, K,
     maxIterVEM = NULL,
     explorFact = 1.5,
     epsilon_tau = 1e-4,
-    epsilon_eta = 1e-4) {
+    epsilon_eta = 2 * .Machine$double.eps) {
 
 
     #------------------------------------------------------------
-    eps <- 2 * .Machine$double.eps
+    #eps <- 2 * .Machine$double.eps
     valStopCrit <- 1e-6
     #------------------------- Data under various format
     S <- data  # a list at that point.
@@ -16,7 +16,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
     array_S <- array(dim = c(d, n, n))
     invisible(sapply(1:d, function(h) {array_S[h, ,] <<- S[[h]]}))
-    mat_S <-sapply(1:d, function(q) {mat_to_vect(S[[q]], symmetric = symmetric, diag = F)})
+    mat_S <- sapply(1:d, function(q) {mat_to_vect(S[[q]], symmetric = symmetric, diag = F)})
 
     N <- nrow(mat_S)
     transfo_indices <- indices(n, symmetric)
@@ -24,6 +24,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
 
     #--------------------Intialisation of parameters eta and G (G a deux classes arete ou pas)
+
     param_gm <- mclust::Mclust(mat_S, G = 2, verbose = FALSE)
     Psi <- param_gm$z
     G <- param_gm$classification - 1
@@ -31,21 +32,21 @@ VEM_NoisySBM <- function(data, symmetric, K,
     #identify G = 0  and G =1
     test_G <- rowMeans(t(mu))
     if (test_G[1] > test_G[2]) {
-      Psi <- Psi[c(2,1)]
+      Psi <- Psi[,c(2,1)]
       G = 1 - G
     }
-    eta0 <- array(rep(Psi_init[, 1], K * K), c(N, K, K)) #ok
+    eta0 <- array(rep(Psi[, 1], K * K), c(N, K, K)) #ok
     eta1 <- 1 - eta0
     #------------------ init of SBM parameters
     membership_type = ifelse(symmetric, "SBM_sym", "SBM")
-    param_sbm <- blockmodels::BM_bernoulli(membership_type, adj = vect_to_mat(G_init, symmetric),
+    param_sbm <- blockmodels::BM_bernoulli(membership_type, adj = vect_to_mat(G, symmetric),
         plotting = '',
         verbosity = 0,
         ncores = 1,
         exploration_factor = explorFact
       )
     param_sbm$estimate()
-    tau_hat <- param_sbm$memberships[[K]]$Z
+    tau_init <- tau_hat <- param_sbm$memberships[[K]]$Z
     theta <- list()
     theta$gamma <- param_sbm$model_parameters[[K]]$pi
     theta$pi <- colMeans(tau_hat)
@@ -67,13 +68,13 @@ VEM_NoisySBM <- function(data, symmetric, K,
     J  <- numeric(3 * maxIterVEM)
 
 
-
+    thetaOld <- theta
 
     ######################
     # Algo begins
     #####################
     noConvergence = 0
-    while (iterVEM < maxIter & stopCrit == 0)
+    while (iterVEM < maxIterVEM & stopCrit == 0)
     {
       iterVEM <- iterVEM + 1
 
@@ -95,16 +96,13 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
       while ((iterVE < maxIterVE) & (stopVE == 0)) {
 
-
+        #----------------- for each i = 1 ... n
         invisible(sapply(1:n, function(i) {
           # m1.i = ensemble des paires dont i est le premier element
           m1.i = which(transfo_indices[, 1] == i)
-          if (length(m1.i) > 0) {
-            B1.i = array(A[m1.i, ,], dim = c(length(m1.i), K, K))
-          }
+          if (length(m1.i) > 0) { B1.i = array(A[m1.i, ,], dim = c(length(m1.i), K, K))}
           # m2.i = ensemble des paires dont i est le second element
           m2.i = which(transfo_indices[, 2] == i)
-
           # Transpoition de A quand i est le second element de la paire m
           if (length(m2.i) > 0) {
             B2.i = array(A[m2.i, ,], dim = c(length(m2.i), K, K))
@@ -113,18 +111,12 @@ VEM_NoisySBM <- function(data, symmetric, K,
             })
           }
           B.i = array(dim = c(length(m1.i) + length(m2.i), K, K))
-          if (length(m1.i) > 0) {
-            B.i[1:length(m1.i), ,] = B1.i
-          }
-          if (length(m2.i) > 0) {
-            B.i[(length(m1.i) + 1):(length(m1.i) + length(m2.i)), ,] = B2.i
-          }
+          if (length(m1.i) > 0) { B.i[1:length(m1.i), ,] = B1.i  }
+          if (length(m2.i) > 0) { B.i[(length(m1.i) + 1):(length(m1.i) + length(m2.i)), ,] = B2.i}
           #  Calcul de tau
           tau.j = tau_old[-i,]
           tau.i = rep(0, K)
-          sapply(1:K, function(k) {
-            tau.i[k] <<- log(theta$pi[k]) + sum(tau.j * B.i[, k,])
-          })
+          invisible(sapply(1:K, function(k) {tau.i[k] <<- log(theta$pi[k]) + sum(tau.j * B.i[, k,])}))
           tau.i = tau.i - max(tau.i)
           tau.i[which(tau.i < -100)] = -100
           tau.i = exp(tau.i)
@@ -132,17 +124,19 @@ VEM_NoisySBM <- function(data, symmetric, K,
           tau.i = tau.i + 1e-4
           tau.i = tau.i / sum(tau.i)
           tau_new[i,] <<- tau.i
-        }))
+        })) #% ------------ end for sapply
       iterVE <- iterVE + 1
-      if (distTau(tau_new,tau_old) < valStopCrit)   stopVE <- 1
+      if (distTau(tau_new,tau_old) < valStopCrit)   {stopVE <- 1}
       if (iterVE == maxIterVE) {noConvergence = noConvergence + 1}
       tau_old = tau_new
       }
       tau_hat = tau_new
       J[(3 * iterVEM) - 2] =  borneInfV2(mat_S,theta,tau_hat,epsilon_eta,symmetric)
+
+
       #--------------------------------   M step
 
-      #--------------------- Calcul gamma:
+      #  Calcul gamma:
       Gamma_hat_num <- matrix(nrow = K, ncol = K)
       Gamma_hat_num <-
         sapply(1:K, function(k) {
@@ -150,15 +144,14 @@ VEM_NoisySBM <- function(data, symmetric, K,
             t(tau_hat[, k]) %*% vect_to_mat(eta1[, k, l], symmetric) %*% tau_hat[, l]
           })
         })
-      Gamma_hat_denum <-
-        (t(tau_hat) %*% (matrix(1, n, n) - diag(1, n)) %*% tau_hat)
+      Gamma_hat_denum <- (t(tau_hat) %*% (matrix(1, n, n) - diag(1, n)) %*% tau_hat)
       theta$gamma <- Gamma_hat_num / Gamma_hat_denum
-      #--------------------
+      #- Calcul pi
       theta$pi <- colMeans(tau_hat)
 
       J[(3 * iterVEM) - 1] =  borneInfV2(mat_S,theta,tau_hat,epsilon_eta,symmetric)
 
-      #calcul de phi les parametres des densités
+      #  Calcul de phi les parametres des densités
       Psi0_hat =  rep(0, N)
       invisible(sapply(1:(n - 1), function(j) {
         sapply((j + 1):n, function(i) {
@@ -172,19 +165,16 @@ VEM_NoisySBM <- function(data, symmetric, K,
       #calcul de phi les parametres des densités
       Psi1_hat = 1 - Psi0_hat
 
-      #calcul de  paramEmission
-      theta$mu1 <- as.vector(Psi1_hat %*% mat_S / sum(Psi1_hat))
-      theta$mu0 <- as.vector(Psi0_hat %*% mat_S / sum(Psi0_hat))
-      theta$var1 <-
-        t(mat_S) %*% diag(Psi1_hat) %*% mat_S / sum(Psi1_hat) - theta$mu1 %o% theta$mu1
-      theta$var0 <-
-        t(mat_S) %*% diag(Psi0_hat) %*% mat_S / sum(Psi0_hat) - theta$mu0 %o% theta$mu0
+      #   Calcul de  paramEmission
+      theta$mu1 <-  as.vector(Psi1_hat %*% mat_S / sum(Psi1_hat))
+      theta$mu0 <-  as.vector(Psi0_hat %*% mat_S / sum(Psi0_hat))
+      theta$var1 <- t(mat_S) %*% diag(Psi1_hat) %*% mat_S / sum(Psi1_hat) - theta$mu1 %o% theta$mu1
+      theta$var0 <- t(mat_S) %*% diag(Psi0_hat) %*% mat_S / sum(Psi0_hat) - theta$mu0 %o% theta$mu0
 
 
       J[(3 * iterVEM) ] =  borneInfV2(mat_S,theta,tau_hat,epsilon_eta,symmetric)
 
-      if (distListTheta(theta, thetaOld) < valStopCrit) stopCrit <- 1
-
+      if (distListTheta(theta, thetaOld) < valStopCrit){ stopCrit <- 1}
       thetaOld <- theta
 
 
@@ -194,6 +184,8 @@ VEM_NoisySBM <- function(data, symmetric, K,
     theta$pi <- theta$pi[ord]
     theta$gamma <- theta$gamma[ord,ord]
 
+    J  = J[J != 0]
+    plot(J,type='l')
     output <- list(tau_init  = tau_init[,ord], tau  = tau_hat[,ord],borne_inf = J)
     output$theta <- theta
     output$Psi0 <- Psi0_hat

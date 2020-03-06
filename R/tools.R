@@ -24,7 +24,7 @@ vect_to_mat <- function(V, symmetric,diag=F)
     M <- matrix(0,n,n)
     where <- (lower.tri(M, diag = diag) +  upper.tri(M, diag = diag)) > 0
     M[where] <- V
-    }
+  }
   return(M)
 }
 
@@ -71,7 +71,7 @@ indices <- function(n, symmetric,diag=F)
     N  <- (n * (n - 1)/2)*(diag==F) + (n * (n + 1)/2)*(diag==T)
   }else{
     N <- (n * n) * (diag == T) + (n * n - n) * (diag == F)
-    }
+  }
   S <- vect_to_mat(c(1:N), symmetric,diag = diag)
 
   if (symmetric) {S[upper.tri(S)] = 0}
@@ -171,4 +171,11 @@ distTau  <- function(tau,tauOld)
   return(sum(vdis))
 }
 
+distListTheta = function(theta,thetaOld){
+
+  M <- length(theta)
+  D <- sum(vapply(1:M,function(m){sum((theta[[m]] - thetaOld[[m]])^2)},1))
+  return(D)
+
+}
 

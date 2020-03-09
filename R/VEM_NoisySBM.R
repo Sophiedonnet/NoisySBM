@@ -177,7 +177,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
       if (distListTheta(theta, thetaOld) < valStopCrit){ stopCrit <- 1}
       thetaOld <- theta
 
-
+plot(J[J != 0],type = 'l')
     }
     ############" reorder
     ord <- order(diag(theta$gamma), decreasing  = TRUE)

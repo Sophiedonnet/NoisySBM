@@ -5,45 +5,46 @@
 \title{Simulate Noisy SBM}
 \usage{
 rNoisySBM(
-  nNodes,
-  symmetric,
-  mixtureParam,
+  nbNodes,
+  directed,
+  blockProp,
   connectParam,
   emissionParam,
   seed = NULL
 )
 }
 \arguments{
-\item{nNodes}{: number of nodes}
+\item{nbNodes}{: number of nodes}
 
-\item{symmetric}{: symmetric (directed or not) (symmetric = TRUE or FALSE)}
+\item{directed}{: directed or not (directed = TRUE or FALSE)}
 
-\item{mixtureParam}{: proportions of the Blocks. Vector of size K}
+\item{blockProp}{: proportions of the Blocks. Vector of size nbBlocks}
 
-\item{connectParam}{: probabilities of connections inside and between blocks. Matrix of size K.}
+\item{connectParam}{: probabilities of connections inside and between blocks. Matrix of size nbBlocks.}
 
-\item{emissionParam}{: parameters of the emission of the Noisy SBM. List of two terms : noEdgeParam and edgeParam. Each element is a list of means (vector or size d) and variance matrix (square matrix of size d)}
+\item{emissionParam}{: parameters of the emission of the Noisy SBM. List of two terms : noEdgeParam and edgeParam. Each element is a list of means (vector or size nbScores) and variance matrix (square matrix of size nbScores)}
 
 \item{seed}{: set the seed for the random simulation (default value  = NULL)}
 }
 \value{
-A list of lists containing the noisy networks (noisyNetworks), the true underlying network trueNetwork and
-Each element of  list_net corresponds to a network : each network is a list containing  the matrix (mat) , the type of network(diradj, adj, inc), the functional group in row (rowFG) and the functional group in columns (colFG)
+A list of containing the noisy networks (noisyNetworks a list of length nbScores of matrices of dimension nbNodes x nbNodes), the true underlying network (trueNetwork) and the clustering of the nodes (memberships)
 }
 \description{
 \code{rNoisyMBM} simulates a collection of networks which are noisy versions of un underlying network.  This network may be directed or not. See vignette for more informations
 }
 \examples{
-nNodes  = 100
-directed = TRUE
-mixtureParam = c(1/3,1/2,1/6)
-nBlocks   = length(mixtureParam)
-connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
+nbNodes  <- 100
+directed <- TRUE
+blockProp <- c(1/3,1/2,1/6)
+nbBlocks   <- length(blockProp)
+connectParam <- matrix(rbeta(nbBlocks^2,1.5,1.5 ),nbBlocks,nbBlocks)
 connectParam <- 0.5*(connectParam + t(connectParam))
 emissionParam <- list()
-d <- 4
-emissionParam$noEdgeParam = list(mean=rep(0,d),var = diag(0.1,nrow = d,ncol = d))
-emissionParam$EdgeParam = list( mean= 1:d,var =  diag(0.1,nrow = d,ncol = d))
-dataSim <- rNoisySBM(nNodes,symmetric = TRUE, mixtureParam,connectParam,emissionParam,seed = NULL)
+nbScores <- 4
+emissionParam$noEdgeParam <- list(mean=rep(0,nbScores));
+emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
+emissionParam$EdgeParam <- list( mean= 1:nbScores)
+emissionParam$EdgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
+dataSim <- rNoisySBM(nbNodes,directed <- TRUE, blockProp,connectParam,emissionParam,seed = NULL)
 
 }

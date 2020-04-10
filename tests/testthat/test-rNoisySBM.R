@@ -1,16 +1,17 @@
 context("testing sampling rNoisySBM")
 
-nNodes  = 100
-symmetric = TRUE
-mixtureParam = c(1/3,1/2,1/6)
-nBlocks   = length(mixtureParam)
-connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
+nbNodes  = 100
+directed = TRUE
+blockProp = c(1/3,1/2,1/6)
+nbBlocks   = length(blockProp)
+connectParam <- matrix(rbeta(nbBlocks^2,1.5,1.5 ),nbBlocks,nbBlocks)
 connectParam <- 0.5*(connectParam + t(connectParam))
 emissionParam <- list()
-d <- 4
-emissionParam$noEdgeParam = list(mean=rep(0,d),var = diag(0.1,nrow = d,ncol = d))
-emissionParam$EdgeParam = list( mean= 1:d,var =  diag(0.1,nrow = d,ncol = d))
-data1 <- rNoisySBM(nNodes, symmetric = TRUE, mixtureParam,connectParam,emissionParam,seed = NULL)
+nbScores <- 4
+emissionParam$noEdgeParam = list(mean = rep(0,nbScores),var = diag(0.1,nrow = nbScores,ncol = nbScores))
+emissionParam$EdgeParam = list( mean = 1:nbScores,var =  diag(0.1,nrow = nbScores,ncol = nbScores))
+data1 <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
+
 
 S <- data1$noisyNetworks
 G <- data1$trueNetwork
@@ -23,13 +24,13 @@ test_that("The simulated object of correct type and  dimensions", {
 
   ########### S must be a list
   expect_type(S,"list")
-  expect_equal(length(S),d)
+  expect_equal(length(S),nbScores)
 
   ######### Check the size of each matrix
   test_dim <- 1;
-  for (net in 1:d) {
+  for (net in 1:nbScores) {
     dim_net <- dim(S[[net]])
-    dim_theo <- c(nNodes,nNodes)
+    dim_theo <- c(nbNodes,nbNodes)
     test_dim <- test_dim * prod(dim_net == dim_theo)
   }
   expect_equal(test_dim,1)
@@ -37,9 +38,9 @@ test_that("The simulated object of correct type and  dimensions", {
   ######### Check the symmetry
   test_symmetry = 1
 
-  if (symmetric) {
+  if (directed) {
     test_symmetry <- test_symmetry *  isSymmetric(G) ;
-    for (net in 1:d) {
+    for (net in 1:nbScores) {
       test_symmetry <- test_symmetry * isSymmetric(S[[net]])
     }
   }

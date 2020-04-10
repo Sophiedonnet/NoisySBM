@@ -7,9 +7,9 @@
 estimateNoisySBM(
   data,
   symmetric,
-  nBlocksMin = 1,
-  nBlocksMax = 10,
-  nBlocksInit = 1,
+  nBlocksMin = NULL,
+  nBlocksMax = NULL,
+  nBlocksInit = NULL,
   save = FALSE,
   verbose = TRUE,
   nCores = NULL,

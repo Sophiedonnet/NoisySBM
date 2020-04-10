@@ -16,7 +16,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
     array_S <- array(dim = c(d, n, n))
     invisible(sapply(1:d, function(h) {array_S[h, ,] <<- S[[h]]}))
-    mat_S <- sapply(1:d, function(q) {mat_to_vect(S[[q]], symmetric = symmetric, diag = F)})
+    mat_S <- sapply(1:d, function(q) {mat2Vect(S[[q]], symmetric = symmetric, diag = F)})
 
     N <- nrow(mat_S)
     transfo_indices <- indices(n, symmetric)
@@ -39,7 +39,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
     eta1 <- 1 - eta0
     #------------------ init of SBM parameters
     membership_type = ifelse(symmetric, "SBM_sym", "SBM")
-    param_sbm <- blockmodels::BM_bernoulli(membership_type, adj = vect_to_mat(G, symmetric),
+    param_sbm <- blockmodels::BM_bernoulli(membership_type, adj = vect2Mat(G, symmetric),
         plotting = '',
         verbosity = 0,
         ncores = 1,
@@ -141,7 +141,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
       Gamma_hat_num <-
         sapply(1:K, function(k) {
           sapply(1:K, function(l) {
-            t(tau_hat[, k]) %*% vect_to_mat(eta1[, k, l], symmetric) %*% tau_hat[, l]
+            t(tau_hat[, k]) %*% vect2Mat(eta1[, k, l], symmetric) %*% tau_hat[, l]
           })
         })
       Gamma_hat_denum <- (t(tau_hat) %*% (matrix(1, n, n) - diag(1, n)) %*% tau_hat)

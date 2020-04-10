@@ -4,10 +4,13 @@
 ############ Manipulation de vecteurs, etc ####################
 ############################################################
 
+
+
+
 #############################################################
 #Construit une matrice symétrique à partir d'un vecteur
 #############################################################
-vect_to_mat <- function(V, symmetric,diag=F)
+vect2Mat <- function(V, symmetric,diag=F)
 {
 
   N <- length(V)
@@ -31,7 +34,7 @@ vect_to_mat <- function(V, symmetric,diag=F)
 ###########################################################################
 #Construit un vecteur à partir d'une matrice triangulaire inférieure
 ###########################################################################
-mat_to_vect <- function(M, symmetric, diag=F)
+mat2Vect <- function(M, symmetric, diag=F)
 {
   if (symmetric) {
     where <- lower.tri(M, diag = diag)
@@ -42,24 +45,24 @@ mat_to_vect <- function(M, symmetric, diag=F)
   return(V)
 }
 
-############################################################################
-#Passage d'une matrice binaire à un vecteur des indices et inversement
-############################################################################
-mat_bin_to_vect_ind <- function(Z)
-{
-  K <- ncol(Z);
-  Z_ind <- Z %*% (1:K)
-  return(Z_ind)
-}
-
-vect_ind_to_mat_bin <- function(Zind)
-{
-  K <- length(unique(Zind))
-  n <- length(Zind)
-  Zind = sample(1:4,n,replace=T)
-  M <-vapply(1:K,function(k){Mk <- rep(0,n);  Mk[which(Zind==k)] = 1; return(Mk)},rep(0,n))
-  return(M)
-}
+# ############################################################################
+# #Passage d'une matrice binaire à un vecteur des indices et inversement
+# ############################################################################
+# matBin2VectInd <- function(Z)
+# {
+#   K <- ncol(Z);
+#   Z_ind <- Z %*% (1:K)
+#   return(Z_ind)
+# }
+#
+# vectInd2MatBin <- function(Zind)
+# {
+#   K <- length(unique(Zind))
+#   n <- length(Zind)
+#   Zind = sample(1:4,n,replace=T)
+#   M <-vapply(1:K,function(k){Mk <- rep(0,n);  Mk[which(Zind==k)] = 1; return(Mk)},rep(0,n))
+#   return(M)
+# }
 
 ###########################################################################
 #recuperer les indices de la matrice triangulaire inferieure (dans le cas symmetric) , ou hors diag si besoin
@@ -72,13 +75,25 @@ indices <- function(n, symmetric,diag=F)
   }else{
     N <- (n * n) * (diag == T) + (n * n - n) * (diag == F)
   }
-  S <- vect_to_mat(c(1:N), symmetric,diag = diag)
+  S <- vect2Mat(c(1:N), symmetric,diag = diag)
 
   if (symmetric) {S[upper.tri(S)] = 0}
   res <- which(S!=0,arr.ind=T)
   return(res)
 }
 
+#############################################################
+#---- Transorm the list of the matrices into a unique matrix
+#############################################################
+scoreList2scoreMat <- function(listScores,symmetric){
+
+  S <- listScores
+  d <- length(S);
+  n <- nrow(S[[1]])
+  mat_S <- sapply(1:d, function(q) {mat2Vect(S[[q]], symmetric = symmetric, diag = F)})
+  # of dimension N  * d where N = n(n-1)/2 if symmetric, n(n-1) otherwise
+  return(mat_S)
+}
 
 
 #############################################################################
@@ -105,11 +120,11 @@ borne_inf <- function(tau_hat,Pi_hat,A,eta0,eta1,symmetric){
   coeff_sym <- 0.5*(symmetric) + 1 * (1-symmetric)
   borne_inf <- sum(tau_hat %*% log(Pi_hat))  - sum(tau_hat * log(tau_hat)) +
     coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-      t(tau_hat[,k]) %*% as.matrix(vect_to_mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
+      t(tau_hat[,k]) %*% as.matrix(vect2Mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
     }))) -
     coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
       t(tau_hat[,k]) %*%
-        as.matrix(vect_to_mat(eta0[, k, l]*log(eta0[, k, l]) +
+        as.matrix(vect2Mat(eta0[, k, l]*log(eta0[, k, l]) +
             eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
         tau_hat[,l]})
     })))
@@ -129,10 +144,10 @@ borneInfV2 <- function(mat_S,theta,tau_hat,epsilon_eta,symmetric){
   coeff_sym <- 0.5*(symmetric) + 1 * (1-symmetric)
   D1 <-  sum(tau_hat %*% log(theta$pi))  - sum(tau_hat * log(tau_hat))
   D2 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-    t(tau_hat[,k]) %*% as.matrix(vect_to_mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
+    t(tau_hat[,k]) %*% as.matrix(vect2Mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
   })))
   D3 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-    t(tau_hat[,k]) %*% as.matrix(vect_to_mat(eta0[, k, l]*log(eta0[, k, l]) +  eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
+    t(tau_hat[,k]) %*% as.matrix(vect2Mat(eta0[, k, l]*log(eta0[, k, l]) +  eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
       tau_hat[,l]})})))
 
   borne_inf <- D1 +  D2 - D3

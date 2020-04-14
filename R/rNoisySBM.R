@@ -37,12 +37,12 @@ rNoisySBM = function(nbNodes,
   Krow <- nrow(connectParam)
   Kcol <- ncol(connectParam)
   if ((K != Krow) |
-      (K !=  Kcol)) {
+      (K != Kcol)) {
     stop('Non matching dimensions between blockProp and connectParam.')
   }
-  if ( directed  &
+  if ( !directed  &
       (!isSymmetric(connectParam))) {
-    stop('For a non-directed (symetric) network connectParam should be a symetric matrix ')
+    stop('For a non-directed (symetric) network connectParam should be a symmetric matrix ')
   }
 
   #-- on the means of the emission parameters

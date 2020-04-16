@@ -50,24 +50,13 @@ a list of estimated parameters for the different models ordered by decreasing IC
 }
 }
 }
-#' @examples
-nNodes  = 100
-directed = TRUE
-mixtureParam = c(1/3,1/2,1/6)
-nBlocks   = length(mixtureParam)
-connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
-connectParam <- 0.5*(connectParam + t(connectParam))
-emissionParam <- list()
-d <- 4
-emissionParam$noEdgeParam = list(mean=rep(0,d),var = diag(0.1,nrow = d,ncol = d))
-emissionParam$EdgeParam = list( mean= 1:d,var =  diag(0.1,nrow = d,ncol = d))
-dataSim <- rNoisySBM(nNodes,symmetric = TRUE, mixtureParam,connectParam,emissionParam,seed = NULL)
-data <- dataSim$noisyNetworks
-res <- estimateNoisySBM(data,symmetric  = TRUE)
 }
 \description{
 Inference of the Noisy SBM  Model
 }
 \details{
 The function \code{multipartiteBM} selects the better numbers of blocks in each FG (with a penalized likelihood criterion). The model selection is performed with a forward backward strategy and the likelihood of each model is maximized with a variational EM).
+}
+\examples{
+nNodes <- 100
 }

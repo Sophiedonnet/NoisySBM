@@ -24,18 +24,7 @@
 #'}
 #' @examples
 #' nNodes <- 100
-#' directed <- TRUE
-#' mixtureParam = c(1/3,1/2,1/6)
-#' nBlocks <- length(mixtureParam)
-#' connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
-#' connectParam <- 0.5*(connectParam + t(connectParam))
-#' emissionParam <- list()
-#' d <- 4
-#' emissionParam$noEdgeParam = list(mean=rep(0,d),var = diag(0.1,nrow = d,ncol = d))
-#' emissionParam$EdgeParam = list( mean= 1:d,var =  diag(0.1,nrow = d,ncol = d))
-#' dataSim <- rNoisySBM(nNodes,symmetric = TRUE, mixtureParam,connectParam,emissionParam,seed = NULL)
-#' data <- dataSim$noisyNetworks
-#' res <- estimateNoisySBM(data,symmetric  = TRUE)
+
 #' @export
 
 

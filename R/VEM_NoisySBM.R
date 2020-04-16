@@ -1,4 +1,4 @@
-VEM_NoisySBM <- function(data, symmetric, K,
+VEMNoisySBM <- function(data, directed, K,
     maxIterVE = NULL ,
     maxIterVEM = NULL,
     explorFact = 1.5,
@@ -8,7 +8,10 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
     #------------------------------------------------------------
     #eps <- 2 * .Machine$double.eps
+    if (is.null(maxIterVE)) { maxIterVE = 1000}
+    if (is.null(maxIterVEM)){maxIterVEM  =  1000}
     valStopCrit <- 1e-6
+
     #------------------------- Data under various format
     S <- data  # a list at that point.
     d <- length(S);
@@ -26,16 +29,16 @@ VEM_NoisySBM <- function(data, symmetric, K,
     #--------------------Intialisation of parameters eta and G (G a deux classes arete ou pas)
 
     param_gm <- mclust::Mclust(mat_S, G = 2, verbose = FALSE)
-    Psi <- param_gm$z
+    psi <- param_gm$z
     G <- param_gm$classification - 1
     mu  <- param_gm$parameters$mean
     #identify G = 0  and G =1
     test_G <- rowMeans(t(mu))
     if (test_G[1] > test_G[2]) {
-      Psi <- Psi[,c(2,1)]
+      psi <- psi[,c(2,1)]
       G = 1 - G
     }
-    eta0 <- array(rep(Psi[, 1], K * K), c(N, K, K)) #ok
+    eta0 <- array(rep(psi[, 1], K * K), c(N, K, K)) #ok
     eta1 <- 1 - eta0
     #------------------ init of SBM parameters
     membership_type = ifelse(symmetric, "SBM_sym", "SBM")
@@ -60,8 +63,7 @@ VEM_NoisySBM <- function(data, symmetric, K,
 
 
     #------------- nb of max  iteration
-    if (is.null(maxIterVE)) { maxIterVE = 1000}
-    if (is.null(maxIterVEM)){maxIterVEM  =  1000}
+
     stopCrit <- 0
     iterVEM <- 0
 

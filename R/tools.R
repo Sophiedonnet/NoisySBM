@@ -124,7 +124,7 @@ scoreList2scoreMat <- function(listScores,symmetric){
 
   S <- listScores
   d <- length(S);
-  n <- nrow(S[[1]])
+  #n <- nrow(S[[1]])
   mat_S <- sapply(1:d, function(q) {mat2Vect(S[[q]], symmetric = symmetric, diag = F)})
   # of dimension N  * d where N = n(n-1)/2 if symmetric, n(n-1) otherwise
   return(mat_S)
@@ -168,27 +168,6 @@ scoreList2scoreMat <- function(listScores,symmetric){
 
 
 # #### non vérifées
-# borneInfV2 <- function(mat_S,theta,tau_hat,epsilon_eta,symmetric){
-#
-#   EA <- computeEta0A(mat_S,theta,epsilon_eta)
-#   eta0 <- EA$eta0
-#   A <- EA$A
-#   eta1 <- 1 - eta0;
-#
-#
-#   coeff_sym <- 0.5*(symmetric) + 1 * (1-symmetric)
-#   D1 <-  sum(tau_hat %*% log(theta$pi))  - sum(tau_hat * log(tau_hat))
-#   D2 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#     t(tau_hat[,k]) %*% as.matrix(vect2Mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
-#   })))
-#   D3 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#     t(tau_hat[,k]) %*% as.matrix(vect2Mat(eta0[, k, l]*log(eta0[, k, l]) +  eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
-#       tau_hat[,l]})})))
-#
-#   borne_inf <- D1 +  D2 - D3
-#
-#   return(borne_inf)
-# }
 
 # #### non vérifées
 # computeEta0A <- function(mat_S,theta,epsilon_eta){
@@ -212,20 +191,5 @@ scoreList2scoreMat <- function(listScores,symmetric){
 # #--------------------------
 # #----------------------  distance on tau
 #
-# distTau  <- function(tau,tauOld)
-# {
-#   Q <- length(tau)
-#   vdis <- sapply(1:Q,function(q){
-#     return(sqrt(sum(as.vector(tau[[q]] - tauOld[[q]])^2)))
-#   })
-#   return(sum(vdis))
-# }
 
-# distListTheta = function(theta,thetaOld){
-#
-#   M <- length(theta)
-#   D <- sum(vapply(1:M,function(m){sum((theta[[m]] - thetaOld[[m]])^2)},1))
-#   return(D)
-#
-# }
 

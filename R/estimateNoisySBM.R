@@ -22,11 +22,11 @@
 #'   }
 #'   }
 #'}
-#'#' @examples
-#' nNodes  = 100
-#' directed = TRUE
+#' @examples
+#' nNodes <- 100
+#' directed <- TRUE
 #' mixtureParam = c(1/3,1/2,1/6)
-#' nBlocks   = length(mixtureParam)
+#' nBlocks <- length(mixtureParam)
 #' connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
 #' connectParam <- 0.5*(connectParam + t(connectParam))
 #' emissionParam <- list()

@@ -9,7 +9,7 @@ initInferenceNoisySBM(scoreList, directed = FALSE)
 \arguments{
 \item{scoreList}{a list of the Scores (matrices of size nbNodes x nbNodes)}
 
-\item{directed}{a logical : TRUE is the underlying network is directed,  FALSE otherwise (default value FALSE).}
+\item{directed}{a logical : TRUE if the underlying network is directed,  FALSE otherwise (default value FALSE).}
 }
 \value{
 An initialisation point (list, see Details here after) for the VEM algortihms for several numbers of blocks
@@ -20,11 +20,11 @@ This function initialises the inference method by mixing a Gaussian mixture on t
 \details{
 The output is a list containing the following entries.
 \itemize{
-\item{"G"}{estimated underlyling network (binary)}
-\item{"psi"}{estimated probability for each pair of nodes to be linked or not}
-\item{"tau"}{list of posterior probabilities for each not to be in a blocks. The length of the list corresponds to the various models explored by the SBM }
-\item{"ICL"}{Penalized likelihood for each of the estimated model}
-\item{"eta"}{Additional quantites used in the VEM}
+\item{"G": }{estimated underlyling network (binary)}
+\item{"psi": }{estimated probability for each pair of nodes to be linked or not}
+\item{"tau": }{list of posterior probabilities for each not to be in a blocks. The length of the list corresponds to the various models explored by the SBM }
+\item{"ICL": }{Penalized likelihood for each of the estimated model}
+\item{"eta": }{Additional quantites used in the VEM}
 }
 }
 \examples{

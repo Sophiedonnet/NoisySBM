@@ -128,8 +128,8 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   HqG <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
       qDist$eta[, k, l] * log(qDist$eta[, k, l] + (qDist$eta[, k, l]==0)) +
-          (1 - qDist$eta[, k, l]) * log(1 - qDist$eta[, k, l] + (qDist$eta[, k, l]==1))
-                                  ))
+        (1 - qDist$eta[, k, l]) * log(1 - qDist$eta[, k, l] + (qDist$eta[, k, l]==1))
+      ))
   })}))
 
   # Scores

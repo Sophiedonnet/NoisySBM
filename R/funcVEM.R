@@ -37,9 +37,10 @@ mStepNoisySBM <- function(scoreMat, qDist, directed){
 ###############################################################################
 # VE step of the VEM algorithm
 ###############################################################################
-veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, tauTol=1e-4, etaTol=tauTol){
+veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, epsilon_eta=epsilon_tau){
 
-  # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE; tauTol <- etaTol <- 1e-4; tauOld <- initDist$tau[[nbBlocks]]
+  # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
+  # epsilon_tau <- epsilon_eta <- 1e-4; tauOld <- qDist$tau
 
   # Dimensions
   nbBlocks <- length(theta$blockProp);
@@ -50,44 +51,46 @@ veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, tauTol=1e-4, etaTo
   logPhi <- matrix(0, N, 2)
   logPhi[, 1] <- mvtnorm::dmvnorm(scoreMat,
                          mean = theta$emissionParam$noEdgeParam$mean,
-                         sigma = theta$emissionParam$noEdgeParam$var, log=TRUE)
+                         sigma = theta$emissionParam$noEdgeParam$var, log = TRUE)
   logPhi[, 2] <- mvtnorm::dmvnorm(scoreMat,
                          mean = theta$emissionParam$EdgeParam$mean,
                          sigma = theta$emissionParam$EdgeParam$var, log = TRUE)
 
   # eta
   eta <- array(dim = c(N, nbBlocks, nbBlocks))
-  sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    etaTmp <- logPhi * (rep(1, N) %o% c(log(1 - theta$connectParam[k, l]), log(theta$connectParam[k, l])))
+  invisible(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
+    etaTmp <- logPhi + (rep(1, N) %o% c(log(1 - theta$connectParam[k, l]), log(theta$connectParam[k, l])))
     etaTmp <- etaTmp - apply(etaTmp, 1, max)
     etaTmp <- exp(etaTmp); etaTmp <- etaTmp / rowSums(etaTmp)
-    etaTmp <- etaTmp + etaTol; etaTmp <- etaTmp / rowSums(etaTmp)
+    # etaTmp <- etaTmp + epsilon_eta; etaTmp <- etaTmp / rowSums(etaTmp)
     eta[, k, l] <<- etaTmp[, 2]
-  })})
+  })}))
 
-  # tau
+  # log(A)
   logA <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
     logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1]) +
       eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2])
     })})
+
+  # tau
   tau <- t(sapply(1:n, function(i){ # i <- 3
     indexListIFirst <- which(indexList[, 1] == i)
     indexListISecond <- which(indexList[, 2] == i)
     sapply(1:nbBlocks, function(k){ # k <- 1
       log(blockProp[k]) +
-        sum(logA[indexListIFirst, k, ]*tauOld[indexList[indexListIFirst, 2], ]) +
-        sum(logA[indexListISecond, , k]*tauOld[indexList[indexListISecond, 1], ])
+        sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
+        sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
       })
     }))
   tau <- tau - apply(tau, 1, max)
   tau <- exp(tau); tau <- tau / rowSums(tau)
-  tau <- tau + tauTol; tau <- tau / rowSums(tau)
+  # tau <- tau + epsilon_tau; tau <- tau / rowSums(tau)
 
   # psi
-  psi <- matrix(0, N,2)
+  psi <- matrix(0, N, 2)
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    psi[,1] <<- psi[,1] + eta[, k, l] * tau[indexList[, 1], k] *  tau[indexList[, 2], l]
+    psi[, 1] <<- psi[, 1] + eta[, k, l] * tau[indexList[, 1], k] *  tau[indexList[, 2], l]
   })})
   psi[,2]  = 1-psi[,1]
 

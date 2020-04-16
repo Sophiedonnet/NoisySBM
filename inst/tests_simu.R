@@ -34,16 +34,31 @@ thetaInit <- mStepNoisySBM(scoreMat=scoreMat,
                           directed=directed)
 
 # VEM
-thetaHat <- thetaInit
+thetaHat <- thetaInit;
 # maxIterVE <- NULL; epsilon_tau <- 1e-4; epsilon_eta <- 2 * .Machine$double.eps
-maxIterVEM <- 100; J <- rep(0, 2*maxIterVEM)
+maxIterVEM <- 100; iter <- 1; J <- rep(0, 2*maxIterVEM)
 for(iter in 1:maxIterVEM){
   qDist <- veStepNoisySBM(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
-  crit <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)
-  J[2*iter-1] <- crit$lowerBound
+  if(iter>1){
+    print('init')
+    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    print('logPhi')
+    qDistOld$LogPhi <- qDist$logPhi
+    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    print('eta')
+    qDistOld$eta <- qDist$eta
+    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    print('tau')
+    qDistOld$tau <- qDist$tau
+    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    print('psi')
+    qDistOld$psi <- qDist$psi
+    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+  }
+  J[2*iter-1] <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)$lowerBound
   thetaHat <- mStepNoisySBM(scoreMat=scoreMat, qDist=qDist, directed=directed)
-  crit <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)
-  J[2*iter] <- crit$lowerBound
-  plot(J[1:iter], col=rep(1:2, iter), pch=20, type='b')
+  J[2*iter] <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)$lowerBound
+  qDistOld <- qDist; #iter <- iter+1
+  plot(J[1:(2*iter)], col=rep(1:2, iter), pch=20, type='b')
 }
 print(unlist(crit))

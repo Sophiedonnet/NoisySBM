@@ -7,21 +7,22 @@ library(tensor)
 # source('D:/WORK_ALL/RECHERCHE/TRAVAUX_RECHERCHE/Stephane_Robin/NOISY_Papier_Package/Package/NoisySBM/R/tools.R', encoding = 'UTF-8')
 source('./R/funcVEM.R', encoding = 'UTF-8')
 source('./R/tools.R', encoding = 'UTF-8')
+source('./inst/veStepNoisySBMbis.R', encoding = 'UTF-8')
 library(mclust)
 
 # Parms
-nNodes  <- 20 #60
+nNodes  <- 60
 blockProp <- c(1/3,1/2,1/6)
-nBlocks   <- length(blockProp) # SR: 'mixtureParam' -> 'blockProp'
-connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ),nBlocks,nBlocks)
-connectParam <- 0.5*(connectParam + t(connectParam))
-emissionParam <- list()
 d <- 4
+nBlocks   <- length(blockProp) # SR: 'mixtureParam' -> 'blockProp'
+connectParam <- matrix(rbeta(nBlocks^2,1.5,1.5 ), nBlocks, nBlocks)
+emissionParam <- list()
 emissionParam$noEdgeParam <- list(mean = rep(0,d),var = diag(0.1,nrow = d,ncol = d))
 emissionParam$EdgeParam <- list( mean = 1:d,var =  diag(0.1,nrow = d,ncol = d))
 
 # Data
-directed <- FALSE
+directed <- TRUE
+if(!directed){connectParam <- 0.5*(connectParam + t(connectParam))}
 dataSim <- rNoisySBM(nNodes, directed = TRUE, blockProp, connectParam, emissionParam, seed = NULL)
 
 # Init
@@ -35,30 +36,37 @@ thetaInit <- mStepNoisySBM(scoreMat=scoreMat,
 
 # VEM
 thetaHat <- thetaInit;
+qDist <- veStepNoisySBM(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
+qDistBis <- veStepNoisySBMbis(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
+
+par(mfrow=c(3, 2), mex=.6, pch=20)
+plot(qDist$logPhi, qDistBis$logPhi); abline(0, 1)
+plot(qDist$logA, qDistBis$logA); abline(0, 1)
+plot(qDist$eta, qDistBis$eta, log='xy'); abline(0, 1)
+plot(qDist$tau, qDistBis$tau, log='xy'); abline(0, 1)
+plot(qDist$psi, qDistBis$psi, log='xy'); abline(0, 1)
+
 # maxIterVE <- NULL; epsilon_tau <- 1e-4; epsilon_eta <- 2 * .Machine$double.eps
-maxIterVEM <- 100; iter <- 1; J <- rep(0, 2*maxIterVEM)
+maxIterVEM <- 20; iter <- 1; J <- rep(0, 2*maxIterVEM);
 for(iter in 1:maxIterVEM){
   qDist <- veStepNoisySBM(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
   if(iter>1){
-    print('init')
-    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
-    print('logPhi')
+    critMat <- c()
+    critMat <- rbind(critMat, unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
     qDistOld$LogPhi <- qDist$logPhi
-    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
-    print('eta')
+    critMat <- rbind(critMat, unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
     qDistOld$eta <- qDist$eta
-    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
-    print('tau')
+    critMat <- rbind(critMat, unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
     qDistOld$tau <- qDist$tau
-    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
-    print('psi')
+    critMat <- rbind(critMat, unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
     qDistOld$psi <- qDist$psi
-    print(unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    critMat <- rbind(critMat, unlist(lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDistOld,directed)))
+    rownames(critMat) <- c('init', 'logPhi', 'eta', 'tau', 'psi')
+    print(critMat)
   }
   J[2*iter-1] <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)$lowerBound
   thetaHat <- mStepNoisySBM(scoreMat=scoreMat, qDist=qDist, directed=directed)
   J[2*iter] <- lowerBoundNoisySBM(scoreMat=scoreMat,theta=thetaHat,qDist=qDist,directed)$lowerBound
   qDistOld <- qDist; #iter <- iter+1
-  plot(J[1:(2*iter)], col=rep(1:2, iter), pch=20, type='b')
 }
-print(unlist(crit))
+plot(J[1:(2*iter)], col=rep(1:2, iter), type='b')

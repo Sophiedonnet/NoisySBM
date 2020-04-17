@@ -94,7 +94,7 @@ veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, 
   })})
   psi[,2]  = 1-psi[,1]
 
-  res <- list(eta = eta, tau = tau, psi = psi, logPhi = logPhi)
+  res <- list(eta = eta, tau = tau, psi = psi, logPhi = logPhi, logA = logA)
   return(res)
 }
 

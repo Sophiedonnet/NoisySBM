@@ -58,7 +58,7 @@ initInferenceNoisySBM <- function(scoreList, directed = FALSE){
   param_sbm$estimate()
   Kmax <- length(param_sbm$memberships)
   tau_init <-  lapply(1:Kmax, function(K){param_sbm$memberships[[K]]$Z})
-  eta  <-  lapply(1:Kmax,  function(K){array(rep(psi[, 1], K * K), c(N, K, K))})
+  eta  <-  lapply(1:Kmax,  function(K){array(rep(psi[, 2], K * K), c(N, K, K))})
   #-------------------------------------------------------------------------------
 
   res <- list(psi = psi, tau = tau_init, eta = eta, ICL = param_sbm$ICL, G = G)

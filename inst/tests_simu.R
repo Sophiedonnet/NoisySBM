@@ -37,17 +37,16 @@ thetaInit <- mStepNoisySBM(scoreMat=scoreMat,
 # VEM
 thetaHat <- thetaInit;
 qDist <- veStepNoisySBM(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
-qDistBis <- veStepNoisySBMbis(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
-
-par(mfrow=c(3, 2), mex=.6, pch=20)
-plot(qDist$logPhi, qDistBis$logPhi); abline(0, 1)
-plot(qDist$logA, qDistBis$logA); abline(0, 1)
-plot(qDist$eta, qDistBis$eta, log='xy'); abline(0, 1)
-plot(qDist$tau, qDistBis$tau, log='xy'); abline(0, 1)
-plot(qDist$psi, qDistBis$psi, log='xy'); abline(0, 1)
+# qDistBis <- veStepNoisySBMbis(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
+# par(mfrow=c(3, 2), mex=.6, pch=20)
+# plot(qDist$logPhi, qDistBis$logPhi); abline(0, 1)
+# plot(qDist$logA, qDistBis$logA); abline(0, 1)
+# plot(qDist$eta, qDistBis$eta, log='xy'); abline(0, 1)
+# plot(qDist$tau, qDistBis$tau, log='xy'); abline(0, 1)
+# plot(qDist$psi, qDistBis$psi, log='xy'); abline(0, 1)
 
 # maxIterVE <- NULL; epsilon_tau <- 1e-4; epsilon_eta <- 2 * .Machine$double.eps
-maxIterVEM <- 20; iter <- 1; J <- rep(0, 2*maxIterVEM);
+maxIterVEM <- 10; iter <- 1; J <- rep(0, 2*maxIterVEM);
 for(iter in 1:maxIterVEM){
   qDist <- veStepNoisySBM(scoreMat=scoreMat, theta=thetaHat, tauOld=initDist$tau[[K]], directed=directed)
   if(iter>1){

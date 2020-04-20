@@ -90,9 +90,9 @@ veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, 
   # psi
   psi <- matrix(0, N, 2)
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    psi[, 1] <<- psi[, 1] + eta[, k, l] * tau[indexList[, 1], k] *  tau[indexList[, 2], l]
+    psi[, 2] <<- psi[, 2] + eta[, k, l] * tau[indexList[, 1], k] *  tau[indexList[, 2], l]
   })})
-  psi[,2]  = 1-psi[,1]
+  psi[, 1]  = 1 - psi[, 2]
 
   res <- list(eta = eta, tau = tau, psi = psi, logPhi = logPhi, logA = logA)
   return(res)
@@ -135,7 +135,7 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   # Scores
   espLogpS <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
-      qDist$eta[, k, l] * theta$logPhi[, 1] + (1 - qDist$eta[, k, l]) * theta$logPhi[, 2]
+      (1 - qDist$eta[, k, l]) * theta$logPhi[, 1] + qDist$eta[, k, l] * theta$logPhi[, 2]
       ))
   })}))
 
@@ -143,6 +143,7 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   entropy <- HqZ + HqG
   lowerBound <- espLogpZ + espLogpG + espLogpS + entropy
   res <- list(espLogpZ=espLogpZ, HqZ=HqZ, espLogpG=espLogpG, HqG=HqG, espLogpS=espLogpZ,
+              klZ=-espLogpZ-HqZ, klG=-espLogpG-HqG,
               entropy=entropy, lowerBound=lowerBound)
   return(res)
 

@@ -1,5 +1,5 @@
 
-nbNodes  = 60
+nbNodes  = 100
 directed = TRUE
 blockProp = c(1/3,1/2,1/6)
 nbBlocks   = length(blockProp)
@@ -24,16 +24,16 @@ psi <- initAll$psi
 tauBestK <- initAll$tau[[bestK]]
 etaBestK <- initAll$eta[[bestK]]
 
+qDist = list(tau=tauBestK,eta=etaBestK,psi = initAll$psi)
 # essai etape M
-resM <- mStepNoisySBM(scoreMat, initAll$psi, tauBestK , etaBestK , directed)
-
+theta <- mStepNoisySBM(scoreMat, qDist , directed)
+J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
 # essai etap VE (1 iter)
 tauTol <- 0.001
 etaTol <- 0.001
-tau0  <- tauBestK
-resVE <- veStepNoisySBM(scoreMat, resM$blockProp, resM$connectParam, resM$emissionParam, tau0, directed, tauTol = tauTol, etaTol = etaTol)
-J <- borneInfNoisySBM(scoreMat,resM,resVE$tau,etaTol,directed)
-
+maxIterVE <- 100
+qDist <- veStepNoisySBM(scoreMat, theta,qDist$tau, directed, tauTol, etaTol,maxIterVE,valStopCrit = 0.00001)
+J2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
 
 
 ##################################################################
@@ -49,7 +49,6 @@ resVEM <- VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TR
 
 plot(resVEM$lowerBound,type = 'l')
 
-#
 
 
 
@@ -61,7 +60,7 @@ initBestK$tau = initAll$tau[[bestK]]
 initBestK$eta = initAll$eta[[bestK]]
 init = initBestK
 resVEM <- VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),maxIterVE = 100 ,
-                      maxIterVEM = 10)
+                      maxIterVEM = 1000)
 
 
 plot(resVEM$lowerBound,type = 'l')

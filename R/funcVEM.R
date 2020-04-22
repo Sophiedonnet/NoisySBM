@@ -37,15 +37,18 @@ mStepNoisySBM <- function(scoreMat, qDist, directed){
 ###############################################################################
 # VE step of the VEM algorithm
 ###############################################################################
-veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, epsilon_eta=epsilon_tau){
+veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxIterVE,valStopCrit){
 
   # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
   # epsilon_tau <- epsilon_eta <- 1e-4; tauOld <- qDist$tau
 
+
+  noConvergence = 0
   # Dimensions
   nbBlocks <- length(theta$blockProp);
   N <- nrow(scoreMat); n <- nbPairs2n(N, symmetric = !directed)
   indexList <- indices(n, symmetric = !directed)
+
 
   # log(phi)
   logPhi <- matrix(0, N, 2)
@@ -69,22 +72,42 @@ veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, 
   # log(A)
   logA <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1]) +
-      eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2])
+    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1] + log(1-eta[,k,l])) +
+      eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2] +  log(eta[,k,l]))
     })})
 
-  # tau
-  tau <- t(sapply(1:n, function(i){ # i <- 3
-    indexListIFirst <- which(indexList[, 1] == i)
-    indexListISecond <- which(indexList[, 2] == i)
-    sapply(1:nbBlocks, function(k){ # k <- 1
-      log(blockProp[k]) +
-        sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
-        sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
+
+  #-------------- Fixed point
+  tau <- tauOld
+  iterVE <- 0;  stopVE <- 0
+
+  while ((iterVE < maxIterVE) & (stopVE == 0)) {
+
+    iterVE <- iterVE + 1
+
+
+    tauOld <- tau;
+    tau <- t(sapply(1:n, function(i){ # i <- 3
+      indexListIFirst <- which(indexList[, 1] == i)
+      indexListISecond <- which(indexList[, 2] == i)
+      sapply(1:nbBlocks, function(k){ # k <- 1
+        log(blockProp[k]) +
+          sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
+          sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
       })
     }))
-  tau <- tau - apply(tau, 1, max)
-  tau <- exp(tau); tau <- tau / rowSums(tau)
+    tau <- tau - apply(tau, 1, max)
+    tau <- exp(tau); tau <- tau / rowSums(tau)
+
+
+    dTau <- distTau(tau,tauOld)
+    if (dTau < valStopCrit)   {stopVE <- 1}
+    #print(c(iterVE,dTau))
+    if (iterVE == maxIterVE) {noConvergence = noConvergence + 1}
+  }
+
+  # tau
+
   # tau <- tau + epsilon_tau; tau <- tau / rowSums(tau)
 
   # psi
@@ -94,8 +117,8 @@ veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, 
   })})
   psi[, 1]  = 1 - psi[, 2]
 
-  res <- list(eta = eta, tau = tau, psi = psi, logPhi = logPhi, logA = logA)
-  return(res)
+  qDist <- list(eta = eta, tau = tau,psi = psi)
+  return(qDist)
 }
 
 ###############################################################################

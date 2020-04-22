@@ -19,14 +19,14 @@ VEMNoisySBM <- function(scoreMat, directed, init,
     #------------ initialisation
     ############################################
 
-    psi <- init$psi;
-    tau <- init$tau;
-    eta <- init$eta;
+
 
     ############################################
     #--------------   Algo begins
     ###########################################
-    noConvergence = 0
+    #noConvergence = 0
+    tau <- init$tau;
+    qDist = init
     while (iterVEM < maxIterVEM & stopCrit == 0)
     {
       print(iterVEM)
@@ -35,43 +35,24 @@ VEMNoisySBM <- function(scoreMat, directed, init,
       #---------------------------------------
       #------------  M step ------------------
       #---------------------------------------
-      resM <- mStepNoisySBM(scoreMat, psi, tau, eta, directed)
-      connectParam <- resM$connectParam
-      blockProp <- resM$blockProp
-      emissionParam <- resM$emissionParam
-      theta = list(connectParam = connectParam, blockProp = blockProp, emissionParam = emissionParam)
 
-      if (monitoring$lowerBound) J[(2 * iterVEM) - 1] =  borneInfNoisySBM(scoreMat,theta,tau,etaTol,directed)
-      #---------------------------------------
+      #-------
+      theta <- mStepNoisySBM(scoreMat, qDist, directed)
+      #------
+
+      if (monitoring$lowerBound) J[(2 * iterVEM) - 1] =   lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+
+
+
+      #-------------------------------------
       #-------------- VE step ----------------
       #---------------------------------------
-      iterVE <- 0;  stopVE <- 0
-
-      while ((iterVE < maxIterVE) & (stopVE == 0)) {
-
-        iterVE <- iterVE + 1
-
-
-        tauOld <- tau;
-        resVE <- veStepNoisySBM(scoreMat, blockProp, connectParam, emissionParam, tauOld, directed, tauTol = tauTol, etaTol = etaTol)
-        tau <- resVE$tau
-
-        dTau <- distTau(tau,tauOld)
-        if (dTau < valStopCrit)   {stopVE <- 1}
-        print(c(iterVE,dTau))
-        if (iterVE == maxIterVE) {noConvergence = noConvergence + 1}
-      }
-
-      psi <- resVE$psi
-      eta <- resVE$eta
-      if (monitoring$lowerBound) J[(2 * iterVEM)] =  borneInfNoisySBM(scoreMat,theta,tau,etaTol,directed)
-      #---------------------------------------
-      #-------------- VE step ----------------
-      #---------------------------------------
+      qDist <- veStepNoisySBM(scoreMat, theta,tauOld = qDist$tau, directed, tauTol, etaTol,maxIterVE,valStopCrit)
+      if (monitoring$lowerBound) J[(2 * iterVEM)] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
 
 
-      if (distTau(tauCurrent, tau) < valStopCrit) { stopCrit <- 1}
+      if (distTau(tauCurrent, qDist$tau) < valStopCrit) { stopCrit <- 1}
 
 
 

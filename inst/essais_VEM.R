@@ -24,7 +24,7 @@ psi <- initAll$psi
 tauBestK <- initAll$tau[[bestK]]
 etaBestK <- initAll$eta[[bestK]]
 
-qDist = list(tau=tauBestK,eta=etaBestK,psi = initAll$psi)
+qDist = list(tau=tauBestK,eta = etaBestK,psi = initAll$psi)
 # essai etape M
 theta <- mStepNoisySBM(scoreMat, qDist , directed)
 J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
@@ -60,7 +60,7 @@ initBestK$tau = initAll$tau[[bestK]]
 initBestK$eta = initAll$eta[[bestK]]
 init = initBestK
 resVEM <- VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),maxIterVE = 100 ,
-                      maxIterVEM = 1000)
+                      maxIterVEM = 100)
 
 
 plot(resVEM$lowerBound,type = 'l')

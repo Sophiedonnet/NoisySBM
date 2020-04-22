@@ -65,7 +65,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
     etaTmp <- logPhi + (rep(1, N) %o% c(log(1 - theta$connectParam[k, l]), log(theta$connectParam[k, l])))
     etaTmp <- etaTmp - apply(etaTmp, 1, max)
     etaTmp <- exp(etaTmp); etaTmp <- etaTmp / rowSums(etaTmp)
-    # etaTmp <- etaTmp + epsilon_eta; etaTmp <- etaTmp / rowSums(etaTmp)
+    etaTmp <- etaTmp + etaTol; etaTmp <- etaTmp / rowSums(etaTmp)
     eta[, k, l] <<- etaTmp[, 2]
   })}))
 

@@ -27,15 +27,15 @@ etaBestK <- initAll$eta[[bestK]]
 qDist = list(tau=tauBestK,eta = etaBestK,psi = initAll$psi)
 # essai etape M
 theta <- mStepNoisySBM(scoreMat, qDist , directed)
-J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 # essai etap VE (1 iter)
-tauTol <- 0.001
-etaTol <- 0.001
+tauTol <- 0.000001
+etaTol <- 0.000001
 maxIterVE <- 100
 qDist <- veStepNoisySBM(scoreMat, theta,qDist$tau, directed, tauTol, etaTol,maxIterVE,valStopCrit = 0.00001)
-J2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+J2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
-
+print(c(J1,J2))
 ##################################################################
 #--------------------- VE -----------------------------
 ##################################################################

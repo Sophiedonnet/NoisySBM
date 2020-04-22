@@ -25,13 +25,13 @@ VEMNoisySBM <- function(scoreMat, directed, init,
     #--------------   Algo begins
     ###########################################
     #noConvergence = 0
-    tau <- init$tau;
+
     qDist = init
     while (iterVEM < maxIterVEM & stopCrit == 0)
     {
       print(iterVEM)
       iterVEM <- iterVEM + 1
-      tauCurrent <- tau
+      tauCurrent <- qDist$tau
       #---------------------------------------
       #------------  M step ------------------
       #---------------------------------------
@@ -51,9 +51,9 @@ VEMNoisySBM <- function(scoreMat, directed, init,
       if (monitoring$lowerBound) J[(2 * iterVEM)] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
 
-
-      if (distTau(tauCurrent, qDist$tau) < valStopCrit) { stopCrit <- 1}
-
+      deltaTau <- distTau(tauCurrent, qDist$tau)
+      if ( deltaTau < valStopCrit) { stopCrit <- 1}
+      print(deltaTau)
 
 
     }
@@ -70,7 +70,7 @@ VEMNoisySBM <- function(scoreMat, directed, init,
     theta$connectParam <- theta$connectParam[ord,ord]
 
     output <- list(tau  = tau[,ord], theta = theta)
-    if (monitoring$lowerBound) output$lowerBound <- J
+    if (monitoring$lowerBound) output$lowerBound <- J[1:(2*iterVEM)]
 
     return(output)
 

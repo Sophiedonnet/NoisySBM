@@ -18,6 +18,14 @@ mStepNoisySBM <- function(scoreMat, qDist, directed){
     connectParam[k, l] <<- tauVec %*% qDist$eta[, k, l] / sum(tauVec)
   })})
 
+  # mthdoe 2 :
+  connectParam2 <- matrix(0, nbBlocks, nbBlocks)
+
+  sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
+    tauVec <- mat2Vect(qDist$tau[, k] %o% qDist$tau[, l], symmetric = !directed, diag = FALSE)
+    connectParam[k, l] <<- tauVec %*% qDist$eta[, k, l] / sum(tauVec)
+  })})
+
   # Emission distributions: mu and Sigma
   mu <- matrix(0, 2, d);
   Sigma <- array(dim = c(2, d, d))
@@ -72,8 +80,8 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
   # log(A)
   logA <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1] + log(1-eta[,k,l])) +
-      eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2] +  log(eta[,k,l]))
+    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1] - log(1-eta[,k,l])) +
+      eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2] -  log(eta[,k,l]))
     })})
 
 

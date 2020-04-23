@@ -18,14 +18,6 @@ mStepNoisySBM <- function(scoreMat, qDist, directed){
     connectParam[k, l] <<- tauVec %*% qDist$eta[, k, l] / sum(tauVec)
   })})
 
-  # mthdoe 2 :
-  connectParam2 <- matrix(0, nbBlocks, nbBlocks)
-
-  sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
-    tauVec <- mat2Vect(qDist$tau[, k] %o% qDist$tau[, l], symmetric = !directed, diag = FALSE)
-    connectParam[k, l] <<- tauVec %*% qDist$eta[, k, l] / sum(tauVec)
-  })})
-
   # Emission distributions: mu and Sigma
   mu <- matrix(0, 2, d);
   Sigma <- array(dim = c(2, d, d))
@@ -99,14 +91,14 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
       indexListIFirst <- which(indexList[, 1] == i)
       indexListISecond <- which(indexList[, 2] == i)
       sapply(1:nbBlocks, function(k){ # k <- 1
-        log(blockProp[k]) +
+        log(theta$blockProp[k]) +
           sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
           sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
       })
     }))
     tau <- tau - apply(tau, 1, max)
     tau <- exp(tau); tau <- tau / rowSums(tau)
-
+    tau <- tau + tauTol; tau <- tau / rowSums(tau)
 
     dTau <- distTau(tau,tauOld)
     if (dTau < valStopCrit)   {stopVE <- 1}
@@ -115,8 +107,6 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
   }
 
   # tau
-
-  # tau <- tau + epsilon_tau; tau <- tau / rowSums(tau)
 
   # psi
   psi <- matrix(0, N, 2)

@@ -69,7 +69,7 @@ VEMNoisySBM <- function(scoreMat, directed, init,
     theta$blockProp <- theta$blockProp[ord]
     theta$connectParam <- theta$connectParam[ord,ord]
 
-    output <- list(tau  = tau[,ord], theta = theta)
+    output <- list(tau  = qDist$tau[,ord], theta = theta)
     if (monitoring$lowerBound) output$lowerBound <- J[1:(2*iterVEM)]
 
     return(output)

@@ -24,7 +24,7 @@ nbBlocksAll = vapply(1:nbModels,function(m){ncol(initAll$tau[[m]])},1)
 
 rangeK <- length(initAll$tau)
 bestK <- which.max(initAll$ICL)
-#bestK <- 1
+bestK <- 3
 psi <- initAll$psi
 tauBestK <- initAll$tau[[bestK]]
 etaBestK <- initAll$eta[[bestK]]
@@ -35,13 +35,15 @@ qDist = list(tau = tauBestK,eta = etaBestK,psi = initAll$psi)
 
 source('R/funcVEM.R')
 theta <- mStepNoisySBM(scoreMat, qDist , directed)
-J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+J1
+L1 <- J1$lowerBound
 # essai etap VE (1 iter)
 
 qDist <- veStepNoisySBM(scoreMat, theta,qDist$tau, directed)
-J2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+L2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
-print(c(J1,J2))
+print(c(L1,L2))
 ##################################################################
 #--------------------- VE -----------------------------
 ##################################################################

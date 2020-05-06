@@ -133,25 +133,43 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, estimOptions = list
 ###############################################################################
 lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
 
-  # scoreMat <- scoreMat; theta <- thetaHat; qDist <- qDist
+  # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
+  # epsilon_tau <- epsilon_eta <- 1e-4; tauOld <- qDist$tau
+
+
 
   # Dimensions
   nbBlocks <- length(theta$blockProp);
-
   N <- nrow(qDist$eta); n <- nbPairs2n(N, symmetric = !directed)
   indexList <- indices(n, symmetric = !directed)
 
+
+  #Useful quantities
+  logPhi <- matrix(0, N, 2)
+  logPhi[, 1] <- mvtnorm::dmvnorm(scoreMat,
+                                  mean = theta$emissionParam$noEdgeParam$mean,
+                                  sigma = theta$emissionParam$noEdgeParam$var, log = TRUE)
+  logPhi[, 2] <- mvtnorm::dmvnorm(scoreMat,
+                                  mean = theta$emissionParam$EdgeParam$mean,
+                                  sigma = theta$emissionParam$EdgeParam$var, log = TRUE)
+
+
+
+
+
   # Blocks
   espLogpZ <- sum(qDist$tau %*% log(theta$blockProp))
-  HqZ <- -sum(qDist$tau*log(qDist$tau + (qDist$tau == 0)))
+  HqZ <- -sum(qDist$tau * log(qDist$tau + (qDist$tau == 0)))
 
   # Network
+
   tauArray <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     tauArray[, k, l] <<- qDist$tau[indexList[, 1], k] * qDist$tau[indexList[, 2], l]
   })})
 
-  logConnectParam <- log(theta$connectParam); log1_ConnectParam <- log(1 - theta$connectParam)
+  logConnectParam <- log(theta$connectParam);
+  log1_ConnectParam <- log(1 - theta$connectParam)
 
   if (nbBlocks == 1) {
     logConnectParam = matrix( logConnectParam,1,1)
@@ -164,6 +182,7 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
       qDist$eta[, k, l] * logConnectParam[k, l] + (1 - qDist$eta[, k, l]) * log1_ConnectParam[k, l]
       ))
   })}))
+
   HqG <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
       qDist$eta[, k, l] * log(qDist$eta[, k, l] + (qDist$eta[, k, l] == 0)) +
@@ -172,9 +191,10 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   })}))
 
   # Scores
+
   espLogpS <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
-      (1 - qDist$eta[, k, l]) * theta$logPhi[, 1] + qDist$eta[, k, l] * theta$logPhi[, 2]
+      (1 - qDist$eta[, k, l]) * logPhi[, 1] + qDist$eta[, k, l] * logPhi[, 2]
       ))
   })}))
 

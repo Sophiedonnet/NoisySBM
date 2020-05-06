@@ -19,7 +19,7 @@
 #' @export
 
 
-estimateNoisySBM = function(scoreList,directed = FALSE,estimOptions=list(),monitoring = list()) {
+estimateNoisySBM = function(scoreList,directed = FALSE, estimOptions=list(), monitoring = list()){
 
   currentOptions <- list(
     verbosity     = 0,
@@ -41,10 +41,7 @@ estimateNoisySBM = function(scoreList,directed = FALSE,estimOptions=list(),monit
 
 
   #------------------------ transform Data
-  nbScores <- length(scoreList)
-  nbNodes <- nrow(scoreList[[1]])
   scoreMat <- sapply(1:nbScores , function(q) {mat2Vect(scoreList[[q]], symmetric = !directed, diag = F)})
-  nbDyads <- nrow(scoreMat)
 
   #--------------------------------- initialisation .
   if (currentOptions$verbosity > 0) { print("-------------- Initialization ----------- ")}
@@ -60,7 +57,7 @@ estimateNoisySBM = function(scoreList,directed = FALSE,estimOptions=list(),monit
 
   init_m  <- list(psi = initAll$psi)
   Estim_m <- function(m){
-    if ((currentOptions$verbosity > 0 ) & (currentOptions$nbCores==1)) {
+    if ((currentOptions$verbosity > 0 ) & (currentOptions$nbCores == 1)) {
       print(paste("-------------- Estimation for",m ,"blocks---- ----- ",sep = ' '))
     }
     init_m$tau = initAll$tau[[m]]
@@ -75,10 +72,6 @@ estimateNoisySBM = function(scoreList,directed = FALSE,estimOptions=list(),monit
     u <- c(listRes[[m]]$nbBlocks,listRes[[m]]$ICL, listRes[[m]]$pen)
   })))
   names(resModelSelect) <- c('nbBlocks','ICL','penalty')
-
-
-
-
 
 }
 

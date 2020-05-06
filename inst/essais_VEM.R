@@ -53,7 +53,7 @@ initBestK$eta = initAll$eta[[bestK]]
 init = initBestK
 resVEM <- VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 100,maxIterVEM = 100))
 
-
+L <- lowerBoundNoisySBM(scoreMat,resVEM$theta,resVEM$qDist,directed)
 
 plot(resVEM$lowerBound,type = 'l')
 

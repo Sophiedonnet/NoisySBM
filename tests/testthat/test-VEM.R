@@ -108,7 +108,7 @@ test_that("VE step is working as espected", {
 ##################################################################
 #--------------------- BorneInf -----------------------------
 ##################################################################
-J <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+J <- lowerBoundNoisySBM(scoreMat,theta = resM,qDist,directed)$lowerBound
 test_that("Lower Bound is working well", {
 
    expect_true(is.numeric(J))
@@ -118,7 +118,7 @@ test_that("Lower Bound is working well", {
 ##################################################################
 #--------------------- VEM-----------------------------
 ##################################################################
-resVEM <-  VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 10,maxIterVEM = 10))
+resVEM <-  VEMNoisySBM(scoreMat, directed, qDist,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 10,maxIterVEM = 10))
 
 
 test_that("Lower Bound is working well", {

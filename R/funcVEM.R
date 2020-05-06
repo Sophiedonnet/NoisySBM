@@ -222,7 +222,7 @@ distTau  <- function(tau,tauOld)
 #----------  VEM algorithm ----------------------------------------------------
 ###############################################################################
 
-VEMNoisySBM <- function(scoreMat, directed, init,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
+VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
 
 
   currentOptions <- list(
@@ -243,8 +243,11 @@ VEMNoisySBM <- function(scoreMat, directed, init,estimOptions = list(),monitorin
   deltaTau <- Inf
 
   if (monitoring$lowerBound) J  <- numeric(currentOptions$maxIterVEM)
-  qDist = init
-
+  qDist = qDistInit
+  nbNodes <- nrow(qDist$tau)
+  nbBlocks <- ncol(qDist$tau)
+  nbDyads <- nrow(scoreMat)
+  nbScores <- ncol(scoreMat)
 
 
 
@@ -289,20 +292,30 @@ VEMNoisySBM <- function(scoreMat, directed, init,estimOptions = list(),monitorin
   ord <- order(diag(theta$connectParam), decreasing  = TRUE)
   theta$blockProp <- theta$blockProp[ord]
   theta$connectParam <- theta$connectParam[ord,ord]
+  qDist$tau <- qDist$tau[,ord]
+  qDist$eta <- qDist$eta[,ord,ord]
 
-  output <- list(tau  = qDist$tau[,ord], theta = theta)
+  if (nbBlocks == 1){
+    qDist$tau = matrix(qDist$tau,ncol = 1)
+    qDist$eta = array(qDist$eta,c(nbDyads,1,1))
+    theta$connectParam <- matrix(theta$connectParam,1,1)
+    theta$blockProp <- matrix(theta$blockProp,1,1)
+    }
+  output <- list(qDist  = qDist, theta = theta)
 
   #--------- Calcul ICL
-  nbBlocks <- ncol(qDist$tau)
-  nbDyads <- nrow(scoreMat)
-  nbNodes <- nrow(qDist$tau)
+  #---- penalty
+
+
   pen1 <- (nbBlocks - 1)*log(nbNodes)
   pen2 <- log(nbDyads) * (directed*nbBlocks^2 + (1 - directed) * (nbBlocks * (nbBlocks  + 1)/2))
   pen3 <- log(nbDyads) * (2 * nbScores + 2 * nbScores*(nbScores + 1)/2)
   pen  <- -0.5 * (pen1 + pen2 + pen3)
+  #--- LOWER BOUND
   LB   <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
   output$nbBlocks <- nbBlocks
   output$pen <- pen
+  #--- ICL
   output$ICL <- LB$lowerBound - LB$entropy + pen
 
   if (monitoring$lowerBound)  output$lowerBound <- J[1:iterVEM]

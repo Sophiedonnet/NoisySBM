@@ -4,12 +4,14 @@
 \alias{initInferenceNoisySBM}
 \title{Initialization of the inference procedure}
 \usage{
-initInferenceNoisySBM(scoreList, directed = FALSE)
+initInferenceNoisySBM(scoreList, directed = FALSE, estimOptions = list())
 }
 \arguments{
 \item{scoreList}{a list of the Scores (matrices of size nbNodes x nbNodes)}
 
 \item{directed}{a logical : TRUE if the underlying network is directed,  FALSE otherwise (default value FALSE).}
+
+\item{estimOptions}{a list of parameters controlling the initialisation step of the inference method. See details.}
 }
 \value{
 An initialisation point (list, see Details here after) for the VEM algortihms for several numbers of blocks
@@ -18,6 +20,13 @@ An initialisation point (list, see Details here after) for the VEM algortihms fo
 This function initialises the inference method by mixing a Gaussian mixture on the scores of each pair of nodes and a SBM on the resulting estimated network G
 }
 \details{
+The list of parameters \code{estimOptions} essentially tunes the optimization process and the variational EM algorithm, with the following parameters
+\itemize{
+\item{"nbCores"}{integer for number of cores used. Default is detectCores()}
+\item{"exploreFactor"}{control the exploration of the number of groups}
+\item{"nbBlocksRange"}{minimal and maximal number or blocks explored}
+}
+
 The output is a list containing the following entries.
 \itemize{
 \item{"G": }{estimated underlyling network (binary)}
@@ -41,5 +50,5 @@ emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
 emissionParam$EdgeParam <- list( mean= 1:nbScores)
 emissionParam$EdgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
 dataSim <- rNoisySBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
-init <- initInferenceNoisySBM(dataSim$noisyNetworks, directed = FALSE)
+init <- initInferenceNoisySBM(dataSim$noisyNetworks)
 }

@@ -60,9 +60,9 @@ test_that("The initialisation is giving  elements of right size", {
 ##################################################################
 #---------------------stepM -----------------------------
 ##################################################################
-resM <- mStepNoisySBM(scoreMat, initAll$psi, tauBestK , etaBestK , directed)
+qDist <- list(tau = tauBestK,eta = etaBestK,psi = initAll$psi)
+resM <- mStepNoisySBM(scoreMat, qDist, directed)
 
-names(resM)
 test_that("M step is working as espected", {
 
 
@@ -88,38 +88,41 @@ test_that("M step is working as espected", {
 ##################################################################
 #---------------------stepVE -----------------------------
 ##################################################################
-tauTol <- 0.001
-etaTol <- 0.001
-tau0  <- tauBestK
-resVE <- veStepNoisySBM(scoreMat, resM$blockProp, resM$connectParam, resM$emissionParam, tau0, directed, tauTol = tauTol, etaTol = etaTol)
+
+resVE <- veStepNoisySBM(scoreMat, theta = resM,qDist$tau, directed)
 test_that("VE step is working as espected", {
 
   expect_type(resVE,"list")
 
   expect_true(is.matrix(resVE$psi))
-  expect_equal(ncol(resVE$psi),2)
-  expect_equal(nrow(resVE$psi),N)
-
-
-
+  expect_equal(dim(resVE$psi),c(N,2))
 
   expect_true(is.array(resVE$eta))
   expect_equal(dim(resVE$eta),c(N,bestK,bestK))
 
   expect_true(is.matrix(resVE$tau))
-  expect_equal(nrow(resVE$tau),nbNodes)
-  expect_equal(ncol(resVE$tau),bestK)
+  expect_equal(dim(resVE$tau),c(nbNodes,bestK))
 }
 )
 
 ##################################################################
 #--------------------- BorneInf -----------------------------
 ##################################################################
-J <- borneInfNoisySBM(scoreMat,resM,resVE$tau,etaTol,directed)
+J <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 test_that("Lower Bound is working well", {
 
    expect_true(is.numeric(J))
  }
 )
 
+##################################################################
+#--------------------- VEM-----------------------------
+##################################################################
+resVEM <-  VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 10,maxIterVEM = 10))
 
+
+test_that("Lower Bound is working well", {
+
+  expect_true(is.numeric(J))
+}
+)

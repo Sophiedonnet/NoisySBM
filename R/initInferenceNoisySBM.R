@@ -3,6 +3,14 @@
 #' This function initialises the inference method by mixing a Gaussian mixture on the scores of each pair of nodes and a SBM on the resulting estimated network G
 #' @param scoreList a list of the Scores (matrices of size nbNodes x nbNodes)
 #' @param directed  a logical : TRUE if the underlying network is directed,  FALSE otherwise (default value FALSE).
+#' @param estimOptions a list of parameters controlling the initialisation step of the inference method. See details.
+#'
+#' @details The list of parameters \code{estimOptions} essentially tunes the optimization process and the variational EM algorithm, with the following parameters
+#'  \itemize{
+#'  \item{"nbCores"}{integer for number of cores used. Default is detectCores()}
+#'  \item{"exploreFactor"}{control the exploration of the number of groups}
+#'  \item{"nbBlocksRange"}{minimal and maximal number or blocks explored}
+#' }
 #'
 #' @return An initialisation point (list, see Details here after) for the VEM algortihms for several numbers of blocks
 #' @details The output is a list containing the following entries.
@@ -28,12 +36,25 @@
 #' emissionParam$EdgeParam <- list( mean= 1:nbScores)
 #' emissionParam$EdgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
 #' dataSim <- rNoisySBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
-#' init <- initInferenceNoisySBM(dataSim$noisyNetworks, directed = FALSE)
+#' init <- initInferenceNoisySBM(dataSim$noisyNetworks)
 #' @importFrom mclust mclustBIC Mclust
+#' @importFrom parallel detectCores
 #' @export
 #'
-initInferenceNoisySBM <- function(scoreList, directed = FALSE){
+initInferenceNoisySBM <- function(scoreList, directed = FALSE, estimOptions = list()){
 
+  currentOptions <- list(
+    explorFactor  = 1.5,
+    nbBlocksRange = c(4,Inf),
+    nbCores       = parallel::detectCores()
+  )
+
+  ## Current options are default expect for those passed by the user
+  currentOptions[names(estimOptions)] <- estimOptions
+
+
+
+  #------------------------------------------------
   nbScores <- length(scoreList)
   scoreMat <- sapply(1:nbScores , function(q) {mat2Vect(scoreList[[q]], symmetric = !directed, diag = F)})
 
@@ -54,7 +75,12 @@ initInferenceNoisySBM <- function(scoreList, directed = FALSE){
   membership_type <- ifelse(directed, "SBM", "SBM_sym")
   param_sbm <- blockmodels::BM_bernoulli(membership_type, adj = vect2Mat(G, symmetric = !directed),
                                          plotting = '',
-                                         verbosity = 0)
+                                         verbosity = 0,
+                                         explore_min = currentOptions$nbBlocksRange[1],
+                                         explore_max = currentOptions$nbBlocksRange[2],
+                                         exploration_factor = currentOptions$explorFact,
+                                         ncores = currentOptions$nbCores)
+
   param_sbm$estimate()
   Kmax <- length(param_sbm$memberships)
   tau_init <-  lapply(1:Kmax, function(K){param_sbm$memberships[[K]]$Z})

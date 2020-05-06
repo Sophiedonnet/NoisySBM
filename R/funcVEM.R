@@ -37,11 +37,17 @@ mStepNoisySBM <- function(scoreMat, qDist, directed){
 ###############################################################################
 # VE step of the VEM algorithm
 ###############################################################################
-veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxIterVE,valStopCrit){
+veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, estimOptions = list()){
 
   # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
   # epsilon_tau <- epsilon_eta <- 1e-4; tauOld <- qDist$tau
-
+  currentOptions <- list(
+    maxIterVE = 100 ,
+    tauTol = 2 * .Machine$double.eps,
+    valStopCrit = 1e-6,
+    etaTol = 2 * .Machine$double.eps
+  )
+  currentOptions[names(estimOptions)] <- estimOptions
 
   noConvergence = 0
   # Dimensions
@@ -65,7 +71,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
     etaTmp <- logPhi + (rep(1, N) %o% c(log(1 - theta$connectParam[k, l]), log(theta$connectParam[k, l])))
     etaTmp <- etaTmp - apply(etaTmp, 1, max)
     etaTmp <- exp(etaTmp); etaTmp <- etaTmp / rowSums(etaTmp)
-    etaTmp <- etaTmp + etaTol; etaTmp <- etaTmp / rowSums(etaTmp)
+    etaTmp <- etaTmp + currentOptions$etaTol; etaTmp <- etaTmp / rowSums(etaTmp)
     eta[, k, l] <<- etaTmp[, 2]
   })}))
 
@@ -79,31 +85,34 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, tauTol, etaTol,maxI
 
   #-------------- Fixed point
   tau <- tauOld
-  iterVE <- 0;  stopVE <- 0
-
-  while ((iterVE < maxIterVE) & (stopVE == 0)) {
-
-    iterVE <- iterVE + 1
 
 
-    tauOld <- tau;
-    tau <- t(sapply(1:n, function(i){ # i <- 3
-      indexListIFirst <- which(indexList[, 1] == i)
-      indexListISecond <- which(indexList[, 2] == i)
-      sapply(1:nbBlocks, function(k){ # k <- 1
-        log(theta$blockProp[k]) +
-          sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
-          sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
-      })
-    }))
-    tau <- tau - apply(tau, 1, max)
-    tau <- exp(tau); tau <- tau / rowSums(tau)
-    tau <- tau + tauTol; tau <- tau / rowSums(tau)
+  if (nbBlocks > 1){
+    iterVE <- 0;  stopVE <- 0
+    while ((iterVE < currentOptions$maxIterVE) & (stopVE == 0)) {
 
-    dTau <- distTau(tau,tauOld)
-    if (dTau < valStopCrit)   {stopVE <- 1}
-    #print(c(iterVE,dTau))
-    if (iterVE == maxIterVE) {noConvergence = noConvergence + 1}
+      iterVE <- iterVE + 1
+
+
+      tauOld <- tau;
+      tau <- t(sapply(1:n, function(i){ # i <- 3
+        indexListIFirst <- which(indexList[, 1] == i)
+        indexListISecond <- which(indexList[, 2] == i)
+        sapply(1:nbBlocks, function(k){ # k <- 1
+          log(theta$blockProp[k]) +
+            sum(logA[indexListIFirst, k, ] * tauOld[indexList[indexListIFirst, 2], ]) +
+            sum(logA[indexListISecond, , k] * tauOld[indexList[indexListISecond, 1], ])
+        })
+      }))
+      tau <- tau - apply(tau, 1, max)
+      tau <- exp(tau); tau <- tau / rowSums(tau)
+      tau <- tau + currentOptions$tauTol; tau <- tau / rowSums(tau)
+
+      dTau <- distTau(tau,tauOld)
+      if (dTau < currentOptions$valStopCrit)   {stopVE <- 1}
+      #print(c(iterVE,dTau))
+      if (iterVE == currentOptions$maxIterVE) {noConvergence = noConvergence + 1}
+    }
   }
 
   # tau
@@ -128,19 +137,28 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
 
   # Dimensions
   nbBlocks <- length(theta$blockProp);
-  N <- nrow(qDist$eta); n <- nbPairs2n(N, symmetric=!directed)
-  indexList <- indices(n, symmetric=!directed)
+
+  N <- nrow(qDist$eta); n <- nbPairs2n(N, symmetric = !directed)
+  indexList <- indices(n, symmetric = !directed)
 
   # Blocks
-  espLogpZ <- sum(qDist$tau%*%log(theta$blockProp))
-  HqZ <- -sum(qDist$tau*log(qDist$tau + (qDist$tau==0)))
+  espLogpZ <- sum(qDist$tau %*% log(theta$blockProp))
+  HqZ <- -sum(qDist$tau*log(qDist$tau + (qDist$tau == 0)))
 
   # Network
-  tauArray <- array(dim=c(N, nbBlocks, nbBlocks))
+  tauArray <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     tauArray[, k, l] <<- qDist$tau[indexList[, 1], k] * qDist$tau[indexList[, 2], l]
   })})
-  logConnectParam <- log(theta$connectParam); log1_ConnectParam <- log(1-theta$connectParam)
+
+  logConnectParam <- log(theta$connectParam); log1_ConnectParam <- log(1 - theta$connectParam)
+
+  if (nbBlocks == 1) {
+    logConnectParam = matrix( logConnectParam,1,1)
+    log1_ConnectParam = matrix(log1_ConnectParam , 1,1)
+  }
+
+
   espLogpG <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
       qDist$eta[, k, l] * logConnectParam[k, l] + (1 - qDist$eta[, k, l]) * log1_ConnectParam[k, l]
@@ -148,8 +166,8 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   })}))
   HqG <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
-      qDist$eta[, k, l] * log(qDist$eta[, k, l] + (qDist$eta[, k, l]==0)) +
-        (1 - qDist$eta[, k, l]) * log(1 - qDist$eta[, k, l] + (qDist$eta[, k, l]==1))
+      qDist$eta[, k, l] * log(qDist$eta[, k, l] + (qDist$eta[, k, l] == 0)) +
+        (1 - qDist$eta[, k, l]) * log(1 - qDist$eta[, k, l] + (qDist$eta[, k, l] == 1))
       ))
   })}))
 
@@ -163,9 +181,9 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
   # Entropy and lower bound
   entropy <- HqZ + HqG
   lowerBound <- espLogpZ + espLogpG + espLogpS + entropy
-  res <- list(espLogpZ=espLogpZ, HqZ=HqZ, espLogpG=espLogpG, HqG=HqG, espLogpS=espLogpZ,
-              klZ=-espLogpZ-HqZ, klG=-espLogpG-HqG,
-              entropy=entropy, lowerBound=lowerBound)
+  res <- list(espLogpZ = espLogpZ, HqZ = HqZ, espLogpG = espLogpG, HqG = HqG, espLogpS = espLogpS,
+              klZ = -espLogpZ - HqZ, klG = -espLogpG - HqG,
+              entropy = entropy, lowerBound = lowerBound)
   return(res)
 
 }
@@ -179,11 +197,101 @@ distTau  <- function(tau,tauOld)
   return(sqrt(sum(as.vector(tau - tauOld)^2)))
 }
 
-# distListTheta = function(theta,thetaOld){
-#
-#   M <- length(theta)
-#   D <- sum(vapply(1:M,function(m){sum((theta[[m]] - thetaOld[[m]])^2)},1))
-#   return(D)
-#
-# }
+
+###############################################################################
+#----------  VEM algorithm ----------------------------------------------------
+###############################################################################
+
+VEMNoisySBM <- function(scoreMat, directed, init,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
+
+
+  currentOptions <- list(
+    verbosity = 0,
+    maxIterVE = 100 ,
+    maxIterVEM = 1000,
+    tauTol = 2 * .Machine$double.eps,
+    valCritStop = 1e-6,
+    etaTol = 2 * .Machine$double.eps
+  )
+  currentOptions[names(estimOptions)] <- estimOptions
+
+
+
+  #------------------------------------------------------------
+
+  iterVEM <- 0
+  deltaTau <- Inf
+
+  if (monitoring$lowerBound) J  <- numeric(currentOptions$maxIterVEM)
+  qDist = init
+
+
+
+
+  #------------------------------------------------------------
+  #--------------   Algo begins
+  #------------------------------------------------------------
+
+
+  while ((iterVEM < currentOptions$maxIterVEM) & (deltaTau > currentOptions$valCritStop))
+  {
+
+    iterVEM <- iterVEM + 1
+    tauCurrent <- qDist$tau
+
+    if(currentOptions$verbosity > 0){
+      print(c(iterVEM,deltaTau))
+    }
+    #------------  M step ------------------
+    theta <- mStepNoisySBM(scoreMat, qDist, directed)
+
+
+    #-------------- VE step ----------------
+    if (ncol(qDist$tau) > 1) {
+      qDist <- veStepNoisySBM(scoreMat, theta,tauOld = qDist$tau, directed,currentOptions)
+    }
+
+      if (monitoring$lowerBound) J[iterVEM] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+
+    #-------------- Stop check  ----------------
+    deltaTau <- distTau(tauCurrent, qDist$tau)
+
+
+  }
+  #------------------------------------------------------------
+  #--------------  End of the algorithm
+  #------------------------------------------------------------
+
+
+
+  #-------------  Reorder
+
+  ord <- order(diag(theta$connectParam), decreasing  = TRUE)
+  theta$blockProp <- theta$blockProp[ord]
+  theta$connectParam <- theta$connectParam[ord,ord]
+
+  output <- list(tau  = qDist$tau[,ord], theta = theta)
+
+  #--------- Calcul ICL
+  nbBlocks <- ncol(qDist$tau)
+  nbDyads <- nrow(scoreMat)
+  nbNodes <- nrow(qDist$tau)
+  pen1 <- (nbBlocks - 1)*log(nbNodes)
+  pen2 <- log(nbDyads) * (directed*nbBlocks^2 + (1 - directed) * (nbBlocks * (nbBlocks  + 1)/2))
+  pen3 <- log(nbDyads) * (2 * nbScores + 2 * nbScores*(nbScores + 1)/2)
+  pen  <- -0.5 * (pen1 + pen2 + pen3)
+  LB   <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+  output$nbBlocks <- nbBlocks
+  output$pen <- pen
+  output$ICL <- LB$lowerBound - LB$entropy + pen
+
+  if (monitoring$lowerBound)  output$lowerBound <- J[1:iterVEM]
+
+
+  return(output)
+
+
+
+
+}
 

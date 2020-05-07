@@ -57,4 +57,7 @@ L <- lowerBoundNoisySBM(scoreMat,resVEM$theta,resVEM$qDist,directed)
 
 plot(resVEM$lowerBound,type = 'l')
 
-
+##################################################################
+#--------------------- ESTIMATE ALL  -----------------------------
+##################################################################
+res_ALL <- estimateNoisySBM(scoreList,directed)

@@ -68,7 +68,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, estimOptions = list
   # eta
   eta <- array(dim = c(N, nbBlocks, nbBlocks))
   invisible(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    etaTmp <- logPhi + (rep(1, N) %o% c(log(1 - theta$connectParam[k, l]), log(theta$connectParam[k, l])))
+    etaTmp <- logPhi + (rep(1, N) %o% c(log(1 - theta$connectParam[k, l] + (theta$connectParam[k,l] == 1)), log(theta$connectParam[k, l] + (theta$connectParam[k,l] == 0))))
     etaTmp <- etaTmp - apply(etaTmp, 1, max)
     etaTmp <- exp(etaTmp); etaTmp <- etaTmp / rowSums(etaTmp)
     etaTmp <- etaTmp + currentOptions$etaTol; etaTmp <- etaTmp / rowSums(etaTmp)
@@ -78,8 +78,8 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, estimOptions = list
   # log(A)
   logA <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l]) + logPhi[, 1] - log(1-eta[,k,l])) +
-      eta[, k, l]*(log(theta$connectParam[k, l]) + logPhi[, 2] -  log(eta[,k,l]))
+    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l] + (theta$connectParam[k,l] == 1)) + logPhi[, 1] - log(1-eta[,k,l])) +
+      eta[, k, l]*(log(theta$connectParam[k, l] + (theta$connectParam[k,l] == 0)) + logPhi[, 2] -  log(eta[,k,l]))
     })})
 
 
@@ -168,8 +168,8 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
     tauArray[, k, l] <<- qDist$tau[indexList[, 1], k] * qDist$tau[indexList[, 2], l]
   })})
 
-  logConnectParam <- log(theta$connectParam);
-  log1_ConnectParam <- log(1 - theta$connectParam)
+  logConnectParam <- log(theta$connectParam + (theta$connectParam == 0));
+  log1_ConnectParam <- log(1 - theta$connectParam  + (theta$connectParam == 1) )
 
   if (nbBlocks == 1) {
     logConnectParam = matrix( logConnectParam,1,1)
@@ -226,7 +226,6 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
 
 
   currentOptions <- list(
-    verbosity = 0,
     maxIterVE = 100 ,
     maxIterVEM = 1000,
     tauTol = 2 * .Machine$double.eps,
@@ -262,9 +261,6 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
     iterVEM <- iterVEM + 1
     tauCurrent <- qDist$tau
 
-    if(currentOptions$verbosity > 0){
-      print(c(iterVEM,deltaTau))
-    }
     #------------  M step ------------------
     theta <- mStepNoisySBM(scoreMat, qDist, directed)
 

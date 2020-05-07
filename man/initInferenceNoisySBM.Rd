@@ -33,7 +33,6 @@ The output is a list containing the following entries.
 \item{"psi": }{estimated probability for each pair of nodes to be linked or not}
 \item{"tau": }{list of posterior probabilities for each not to be in a blocks. The length of the list corresponds to the various models explored by the SBM }
 \item{"ICL": }{Penalized likelihood for each of the estimated model}
-\item{"eta": }{Additional quantites used in the VEM}
 }
 }
 \examples{

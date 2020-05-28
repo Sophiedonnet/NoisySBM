@@ -19,11 +19,17 @@ LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.1.0
 Imports: 
-    mclust,
     blockmodels,
     igraph,
     ggplot2,
     mvtnorm,
     pbmcapply
+Collate: 
+    'rNoisySBM.R' 
+    'tools.R' 
+    'funcVEM.R'
+    'mclustBIC.R'
+    'initInferenceNoisySBM.R'
+    'estimateNoisySBM.R'
 Suggests: 
     testthat (>= 2.1.0)

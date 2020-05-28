@@ -61,8 +61,8 @@ emissionParam <- list()
 nbScores <- 4
 emissionParam$noEdgeParam <- list(mean=rep(0,nbScores));
 emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
-emissionParam$EdgeParam <- list( mean= 1:nbScores)
-emissionParam$EdgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
+emissionParam$edgeParam <- list( mean= 1:nbScores)
+emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
 dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
 scoreList <- dataSim$noisyNetworks
 resEstim <- estimateNoisySBM(scoreList,directed)

@@ -19,8 +19,8 @@
 #' nbScores <- 4
 #' emissionParam$noEdgeParam <- list(mean=rep(0,nbScores));
 #' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
-#' emissionParam$EdgeParam <- list( mean= 1:nbScores)
-#' emissionParam$EdgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
+#' emissionParam$edgeParam <- list( mean= 1:nbScores)
+#' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
 #' dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
 #'
 #' @export
@@ -47,7 +47,7 @@ rNoisySBM = function(nbNodes,
 
   #-- on the means of the emission parameters
 
-  dE <- length(emissionParam$EdgeParam$mean)
+  dE <- length(emissionParam$edgeParam$mean)
   dnoE <- length(emissionParam$noEdgeParam$mean)
   if (dE != dnoE) {
     stop('The two means of the Emission distributions should be of the same sizes')
@@ -56,11 +56,11 @@ rNoisySBM = function(nbNodes,
 
 
   if (d > 1) {
-    if (!isSymmetric(emissionParam$EdgeParam$var) |
+    if (!isSymmetric(emissionParam$edgeParam$var) |
         !isSymmetric(emissionParam$noEdgeParam$var)) {
       stop('One (or both) of the var parameters of the emission distribution are not Symetric')
     }
-    if (d != nrow(emissionParam$EdgeParam$var) |
+    if (d != nrow(emissionParam$edgeParam$var) |
         d != nrow(emissionParam$noEdgeParam$var)) {
       stop(' Check the sizes od the eimssion variance matrices')
     }
@@ -79,8 +79,8 @@ rNoisySBM = function(nbNodes,
   GArray <- replicate(d, G, simplify = "array")
   X1 <-
     mvtnorm::rmvnorm(nbNodes ^ 2,
-      emissionParam$EdgeParam$mean,
-      emissionParam$EdgeParam$var)
+      emissionParam$edgeParam$mean,
+      emissionParam$edgeParam$var)
   X0 <-
     mvtnorm::rmvnorm(nbNodes ^ 2,
       emissionParam$noEdgeParam$mean,
@@ -89,7 +89,7 @@ rNoisySBM = function(nbNodes,
   X0Array <- array(X0, c(nbNodes, nbNodes, d))
   XArray <- X1Array * GArray + X0Array * (1 - GArray)
   X <- lapply(1:d, function(i) {U <- XArray[, , i]; diag(U) <- NA; return(U)})
-  if (directed){
+  if (!directed){
     where <- upper.tri(G)
     G[where] <- t(G)[where]
     diag(G) <- rep(0,nbNodes)

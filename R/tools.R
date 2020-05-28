@@ -1,17 +1,21 @@
-############################################################
-############ Fonctions de bases à utiliser dans R ####################
-############ Ex : "Main_function_last" ####################
-############ Manipulation de vecteurs, etc ####################
-############################################################
-
 #-------------------------------------------------------------------------------
 # Computes the number of (symmetric) pairs
 #-------------------------------------------------------------------------------
-n2nbPairs <- function(n, symmetric, diag=FALSE){
-  if(symmetric){
-    N <- ifelse(diag, n*(n+1)/2, n*(n-1)/2)
+#' n2nbPairs : compute the number of Dyads from the number of nodes for a network
+#' @param n : number of nodes
+#' @param symmetric  : TRUE is the network is not  directed. FALSE otherwise
+#' @param diag  : FALSE if the self interactions are neglected. TRUE otherwise (default value =  FALSE)
+#' @return number of dyades
+#' @export
+#' @examples
+#' n <- 10;
+#' N <- n2nbPairs(n, symmetric = TRUE, diag=FALSE)
+n2nbPairs <- function(n, symmetric, diag = FALSE){
+
+  if (symmetric) {
+    N <- ifelse(diag, n*(n + 1)/2, n*(n - 1)/2)
   }else{
-    N <- ifelse(diag, N <- n^2, n*(n-1))
+    N <- ifelse(diag, N <- n^2, n*(n - 1))
   }
   return(N)
 }
@@ -19,8 +23,17 @@ n2nbPairs <- function(n, symmetric, diag=FALSE){
 #-------------------------------------------------------------------------------
 # Computes the individual from the number of (symmetric) pairs
 #-------------------------------------------------------------------------------
+#' nbPairs2n : compute the number of nodes of a network from its number of dyads
+#' @param N  : number of dyads
+#' @param symmetric  : TRUE is the network is not  directed. FALSE otherwise
+#' @param diag  : FALSE if the self interactions are neglected. TRUE otherwise (default value =  FALSE)
+#' @return number of dyades
+#' @export
+#' @examples
+#' N <- 45;
+#' n <- nbPairs2n(n, symmetric = TRUE, diag=FALSE)
 nbPairs2n <- function(N, symmetric, diag=FALSE){
-  if(symmetric){
+  if (symmetric) {
     n <- ifelse(diag, (-1 + sqrt(1 + 8*N))/2 , (1 + sqrt(1 + 8 * N))/2)
   }else{
     n <- ifelse(diag, sqrt(N) , (1 + sqrt(1 + 4*N))/2)
@@ -31,6 +44,16 @@ nbPairs2n <- function(N, symmetric, diag=FALSE){
 #-------------------------------------------------------------------------------
 # Builds a (symmetric) matrix from a vector
 #-------------------------------------------------------------------------------
+#' vect2Mat : transform a vector into a  matrix  (replicating symetric elements if needed)
+#'
+#' @param V : vector
+#' @param symmetric  : TRUE is the network is not  directed. FALSE otherwise
+#' @param diag  : FALSE if the self interactions are neglected. TRUE otherwise (default value =  FALSE)
+#' @return matrix fulfilled with the elements of the matrix
+#' @export
+#' @examples
+#' V <- c(0,15);
+#' M <- vect2Mat(V, symmetric = TRUE, diag=FALSE)
 vect2Mat <- function(V, symmetric, diag=FALSE)
 {
 
@@ -56,6 +79,17 @@ vect2Mat <- function(V, symmetric, diag=FALSE)
 #-------------------------------------------------------------------------------
 # Builds a vector from a (symmetric) matrix
 #-------------------------------------------------------------------------------
+#' mat2Vect : Builds a vector from a (symmetric) matrix
+#'
+#' @param V : vector
+#' @param symmetric  : TRUE is the network is not  directed. FALSE otherwise
+#' @param diag  : FALSE if the self interactions are neglected. TRUE otherwise (default value =  FALSE)
+#' @return matrix fulfilled with the elements of the matrix
+#' @export
+#' @examples
+#' V <- c(0,15);
+#' M <- vect2Mat(V, symmetric = TRUE, diag=FALSE)
+#' V2 <- mat2Vect(M, symmetrice = TRUE, diag = FALSE)
 mat2Vect <- function(M, symmetric, diag=FALSE)
 {
   if (symmetric) {
@@ -68,58 +102,42 @@ mat2Vect <- function(M, symmetric, diag=FALSE)
 }
 
 #-------------------------------------------------------------------------------
-#- Gest the indices corresponding to a list of (symmetric) pairs
+#- Get the indices corresponding to a list of (symmetric) pairs
 #-------------------------------------------------------------------------------
 indices <- function(n, symmetric, diag=FALSE)
 {
-  N <- n2nbPairs(n, symmetric=symmetric, diag=diag)
-  S <- vect2Mat(1:N, symmetric=symmetric, diag=diag)
+  N <- n2nbPairs(n, symmetric = symmetric, diag=diag)
+  S <- vect2Mat(1:N, symmetric = symmetric, diag=diag)
   if (symmetric) {S[upper.tri(S)] = 0}
   res <- which(S!=0, arr.ind=TRUE)
   return(res)
 }
 
 
-# ############################################################################
-# # Passage d'une matrice binaire à un vecteur des indices et inversement
-# ############################################################################
-# matBin2VectInd <- function(Z)
-# {
-#   K <- ncol(Z);
-#   Z_ind <- Z %*% (1:K)
-#   return(Z_ind)
-# }
-#
-# vectInd2MatBin <- function(Zind)
-# {
-#   K <- length(unique(Zind))
-#   n <- length(Zind)
-#   Zind = sample(1:4,n,replace=T)
-#   M <-vapply(1:K,function(k){Mk <- rep(0,n);  Mk[which(Zind==k)] = 1; return(Mk)},rep(0,n))
-#   return(M)
-# }
 
-# ###########################################################################
-# # recuperer les indices de la matrice triangulaire inferieure (dans le cas symmetric) , ou hors diag si besoin
-# ###########################################################################
-#
-# indices <- function(n, symmetric, diag=F)
-# {
-#   if (symmetric){
-#     N  <- (n * (n - 1)/2)*(diag==F) + (n * (n + 1)/2)*(diag==T)
-#   }else{
-#     N <- (n * n) * (diag == T) + (n * n - n) * (diag == F)
-#   }
-#   S <- vect2Mat(c(1:N), symmetric,diag = diag)
-#
-#   if (symmetric) {S[upper.tri(S)] = 0}
-#   res <- which(S!=0,arr.ind=T)
-#   return(res)
-# }
-
-#############################################################
+#------------------------------------------------------------------------------
 #---- Transorm the list of the matrices into a unique matrix
-#############################################################
+#------------------------------------------------------------------------------
+#' scoreList2scoreMat : transform a list of Score matrices (matrices of size nxn) into a matrix
+#' @param listScores : list of scores vector
+#' @param symmetric  : TRUE is the network is not  directed. FALSE otherwise
+#' @return one matrix with 'nbDyads' rows and d columns
+#' @export
+#' @examples
+#' nbNodes  <- 100
+#' directed <- TRUE
+#' blockProp <- c(1/3,1/2,1/6)
+#' nbBlocks   <- length(blockProp)
+#' connectParam <- matrix(rbeta(nbBlocks^2,1.5,1.5 ),nbBlocks,nbBlocks)
+#' connectParam <- 0.5*(connectParam + t(connectParam))
+#' emissionParam <- list()
+#' nbScores <- 4
+#' emissionParam$noEdgeParam <- list(mean=rep(0,nbScores));
+#' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
+#' emissionParam$edgeParam <- list( mean= 1:nbScores)
+#' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
+#' dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
+#' S <- scoreList2scoreMat(dataSim$noisyNetworks , symmetric = FALSE)
 scoreList2scoreMat <- function(listScores,symmetric){
 
   S <- listScores
@@ -131,101 +149,5 @@ scoreList2scoreMat <- function(listScores,symmetric){
 }
 
 
-#############################################################################
-#############################################################################
-# Indice_mat <- function(n,V)
-# {
-#   i <- (V-1)%/%n +1
-#   j <- V%%n + n * ((V%%n)==0)
-#   return(cbind(matrix(c(i,j),ncol=2)))
-# }
 
-
-#############################################################################
-# #############################################################################
-# fun_test<-function(a_i_b_i){
-#   return(exp(seq(log(a_i_b_i["a"]),log(a_i_b_i["b"]),length.out = a_i_b_i["k"])))
-# }
-#############################################################################
-#############################################################################
-# ##########################################################################
-# # Calcul de la borne inf
-# #### non vérifées
-# borne_inf <- function(tau_hat,Pi_hat,A,eta0,eta1,symmetric){
-#   coeff_sym <- 0.5*(symmetric) + 1 * (1-symmetric)
-#   borne_inf <- sum(tau_hat %*% log(Pi_hat))  - sum(tau_hat * log(tau_hat)) +
-#     coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#       t(tau_hat[,k]) %*% as.matrix(vect2Mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
-#     }))) -
-#     coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#       t(tau_hat[,k]) %*%
-#         as.matrix(vect2Mat(eta0[, k, l]*log(eta0[, k, l]) +
-#             eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
-#         tau_hat[,l]})
-#     })))
-#   return(borne_inf)
-# }
-
-
-# #### non vérifées
-# borneInfV2 <- function(mat_S,theta,tau_hat,epsilon_eta,symmetric){
-#
-#   EA <- computeEta0A(mat_S,theta,epsilon_eta)
-#   eta0 <- EA$eta0
-#   A <- EA$A
-#   eta1 <- 1 - eta0;
-#
-#
-#   coeff_sym <- 0.5*(symmetric) + 1 * (1-symmetric)
-#   D1 <-  sum(tau_hat %*% log(theta$pi))  - sum(tau_hat * log(tau_hat))
-#   D2 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#     t(tau_hat[,k]) %*% as.matrix(vect2Mat(A[,k,l],symmetric)) %*% tau_hat[,l]})
-#   })))
-#   D3 <- coeff_sym*(sum(sapply(1:K, function(k){ sapply(1:K, function(l){
-#     t(tau_hat[,k]) %*% as.matrix(vect2Mat(eta0[, k, l]*log(eta0[, k, l]) +  eta1[, k, l]*log(eta1[, k, l]),symmetric)) %*%
-#       tau_hat[,l]})})))
-#
-#   borne_inf <- D1 +  D2 - D3
-#
-#   return(borne_inf)
-# }
-
-# #### non vérifées
-# computeEta0A <- function(mat_S,theta,epsilon_eta){
-#   lfu <- cbind(
-#     mvtnorm::dmvnorm(mat_S, theta$mu0, theta$var0, log = TRUE),
-#     mvtnorm::dmvnorm(mat_S, theta$mu1, theta$var1, log = TRUE)
-#   )
-#   dlfu = lfu[, 1] - lfu[, 2]
-#   dlfu[which(abs(dlfu) > 100)] = sign(dlfu[which(abs(dlfu) > 100)]) * 100 # Troncature pour eviter les pb numeriques
-#   eta1 = 1 / (1 + exp(dlfu) %o% ((1 - theta$gamma) / theta$gamma))
-#   eta0 = 1 - eta1
-#   # Lissage des proba a conditionnelles
-#   eta0 = eta0 + epsilon_eta ; eta1 = eta1 + epsilon_eta ; eta = eta0 + eta1;
-#   eta0 = eta0 / eta;
-#   A <- eta0 * (rep(1, N) %o% log(1 - theta$gamma)) + eta0 * lfu[, 1] + eta1 * (rep(1, N) %o% log(theta$gamma)) + eta1 * lfu[, 2]
-#
-#   return(list(eta0 = eta0,A=A))
-#
-# }
-
-# #--------------------------
-# #----------------------  distance on tau
-#
-# distTau  <- function(tau,tauOld)
-# {
-#   Q <- length(tau)
-#   vdis <- sapply(1:Q,function(q){
-#     return(sqrt(sum(as.vector(tau[[q]] - tauOld[[q]])^2)))
-#   })
-#   return(sum(vdis))
-# }
-
-# distListTheta = function(theta,thetaOld){
-#
-#   M <- length(theta)
-#   D <- sum(vapply(1:M,function(m){sum((theta[[m]] - thetaOld[[m]])^2)},1))
-#   return(D)
-#
-# }
 

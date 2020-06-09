@@ -241,7 +241,7 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
   iterVEM <- 0
   deltaTau <- Inf
 
-  if (monitoring$lowerBound) J  <- numeric(currentOptions$maxIterVEM)
+  if (monitoring$lowerBound) J  <- numeric(2*currentOptions$maxIterVEM)
   qDist = qDistInit
   nbNodes <- nrow(qDist$tau)
   nbBlocks <- ncol(qDist$tau)
@@ -264,13 +264,13 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
     #------------  M step ------------------
     theta <- mStepNoisySBM(scoreMat, qDist, directed)
 
-
+    if (monitoring$lowerBound) J[2*iterVEM - 1 ] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
     #-------------- VE step ----------------
     if (ncol(qDist$tau) > 1) {
       qDist <- veStepNoisySBM(scoreMat, theta,tauOld = qDist$tau, directed,currentOptions)
     }
 
-      if (monitoring$lowerBound) J[iterVEM] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+    if (monitoring$lowerBound) J[2*iterVEM] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
     #-------------- Stop check  ----------------
     deltaTau <- distTau(tauCurrent, qDist$tau)

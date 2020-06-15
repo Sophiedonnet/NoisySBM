@@ -10,7 +10,7 @@
 #' @examples
 #' n <- 10;
 #' N <- n2nbPairs(n, symmetric = TRUE, diag=FALSE)
-n2nbPairs <- function(n, symmetric, diag = FALSE){
+  n2nbPairs <- function(n, symmetric, diag = FALSE){
 
   if (symmetric) {
     N <- ifelse(diag, n*(n + 1)/2, n*(n - 1)/2)

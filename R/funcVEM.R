@@ -183,7 +183,7 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed){
       ))
   })}))
 
-  HqG <- sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
+  HqG <- -sum(sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){
     sum(tauArray[, k, l] * (
       qDist$eta[, k, l] * log(qDist$eta[, k, l] + (qDist$eta[, k, l] == 0)) +
         (1 - qDist$eta[, k, l]) * log(1 - qDist$eta[, k, l] + (qDist$eta[, k, l] == 1))
@@ -247,6 +247,7 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
   nbBlocks <- ncol(qDist$tau)
   nbDyads <- nrow(scoreMat)
   nbScores <- ncol(scoreMat)
+  connectParamOld <- matrix(.5, nbBlocks, nbBlocks)
 
 
 
@@ -273,7 +274,9 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit,estimOptions = list(),moni
     if (monitoring$lowerBound) J[2*iterVEM] =  lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
 
     #-------------- Stop check  ----------------
-    deltaTau <- distTau(tauCurrent, qDist$tau)
+    deltaTau <- max(abs(connectParamOld - theta$connectParam))
+    # deltaTau <- distTau(tauCurrent, qDist$tau)
+    connectParamOld <- theta$connectParam
 
 
   }

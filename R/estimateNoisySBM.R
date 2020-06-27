@@ -50,7 +50,7 @@
 #' @export
 
 
-estimateNoisySBM = function(scoreList,directed = FALSE, estimOptions=list(), monitoring = list()){
+estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, estimOptions=list(), monitoring = list()){
 
   currentOptions <- list(
     verbosity     = 1,
@@ -76,6 +76,12 @@ estimateNoisySBM = function(scoreList,directed = FALSE, estimOptions=list(), mon
   nbScores <- length(scoreList)
   scoreMat <- sapply(1:nbScores , function(q) {mat2Vect(scoreList[[q]], symmetric = !directed, diag = F)})
 
+  #--------------------------------- nparm model.
+  if(nparm){
+    kerSigma <- Hpi(scoreMat)
+    gram <- sapply(1:nrow(scoreMat), function(ij){dmvnorm(scoreMat, mean=scoreMat[ij, ], sigma=kerSigma)})
+  }else{gram <- NULL}
+
   #--------------------------------- initialisation .
   if (currentOptions$verbosity > 0) { print("-------------- Initialization ----------- ")}
   initAll <- initInferenceNoisySBM(scoreList, directed,currentOptions)
@@ -97,7 +103,7 @@ estimateNoisySBM = function(scoreList,directed = FALSE, estimOptions=list(), mon
     }
     init_m$tau = initAll$tau[[m]]
     init_m$eta = initAll$eta[[m]]
-    resVEM_m <- VEMNoisySBM(scoreMat, directed, init_m,currentOptions,currentMonitoring)
+    resVEM_m <- VEMNoisySBM(scoreMat=scoreMat, directed=directed, qDistInit=init_m, nparm=nparm, gram=gram, currentOptions,currentMonitoring)
     if ((currentOptions$verbosity > 0 ) & (currentOptions$nbCores == 1)) {
       print(paste("ICL = ",resVEM_m$ICL,sep = ' '))
     }

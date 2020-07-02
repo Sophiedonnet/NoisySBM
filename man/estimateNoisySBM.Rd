@@ -7,6 +7,7 @@
 estimateNoisySBM(
   scoreList,
   directed = FALSE,
+  nparm = FALSE,
   estimOptions = list(),
   monitoring = list()
 )
@@ -14,7 +15,9 @@ estimateNoisySBM(
 \arguments{
 \item{scoreList}{:  list of Scores for each dyad  of an underlying network}
 
-\item{directed}{:  if true the inference network is directed. Default value = FALSE.}
+\item{directed}{:  Boolean. If true the inference network is directed. Default value = FALSE.}
+
+\item{nparm}{: Boolean. If true then the emission distribution is Non Parametric (Default value FALSE)}
 
 \item{estimOptions}{: tunes the optimization process (see details below)}
 
@@ -42,7 +45,7 @@ The list of parameters \code{estimOptions} essentially tunes the optimization pr
 
 Each element of the output list contains the following quantites:
 \itemize{
-\item{"theta"}{ estimated parameters}
+\item{"theta"}{estimated parameters}
 \item{"nbBlocks"}{ number of blocks in the underlying network}
 \item{"qDist"}{ variational approximation of the the conditional distribution q(G,Z | data)}
 \item{"ICL": }{Integrated Likelihood Criterion}

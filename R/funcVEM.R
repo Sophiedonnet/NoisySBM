@@ -64,13 +64,20 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
 
   # log(phi)
   if(nparm){
-    # logPhi <- log(gram %*% cbind(theta$emission$noEdgeParam$weight, theta$emission$edgeParam$weight))
-    # sort terms in the scalar product to improve numeric stability
-    logPhi <- matrix(NA, N, 2)
-    for(ij in 1:N){
-      logPhi[ij, 1] <- sum(sort(gram[ij, ] * theta$emission$noEdgeParam$weight))
-      logPhi[ij, 2] <- sum(sort(gram[ij, ] * theta$emission$edgeParam$weight))
-    }
+    options(matprod = 'internal')
+    logPhi <- log(gram %*% cbind(theta$emission$noEdgeParam$weight, theta$emission$edgeParam$weight))
+    u <- (logPhi != -Inf)
+    v <- (logPhi == -Inf)
+    m <- min(logPhi[u])
+    logPhi[v] = m
+        # sort terms in the scalar product to improve numeric stability
+    #logPhi <- matrix(NA, N, 2)
+    #for(ij in 1:N){
+      #logPhi[ij, 1] <- log(sum(sort(gram[ij, ] * theta$emission$noEdgeParam$weight)))
+      #logPhi[ij, 2] <- log(sum(sort(gram[ij, ] * theta$emission$edgeParam$weight)))
+    #}
+
+
   }else{
     logPhi <- matrix(0, N, 2)
     logPhi[, 1] <- mvtnorm::dmvnorm(scoreMat,
@@ -162,12 +169,18 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed, nparm=FALSE, gram=
 
 
   #Useful quantities
+
   logPhi <- matrix(NA, N, 2)
   if(nparm){
-   for(ij in 1:N){
-      logPhi[ij, 1] <- sum(sort(gram[ij, ] * theta$emission$noEdgeParam$weight))
-      logPhi[ij, 2] <- sum(sort(gram[ij, ] * theta$emission$edgeParam$weight))
-    }
+   # for(ij in 1:N){
+   #    logPhi[ij, 1] <- sum(sort(gram[ij, ] * theta$emission$noEdgeParam$weight))
+   #    logPhi[ij, 2] <- sum(sort(gram[ij, ] * theta$emission$edgeParam$weight))
+   # }
+  logPhi <- log(gram %*% cbind(theta$emission$noEdgeParam$weight, theta$emission$edgeParam$weight))
+  u <- (logPhi != -Inf)
+  v <- (logPhi == -Inf)
+  m <- min(logPhi[u])
+  logPhi[v] = m
   }else{
     logPhi <- matrix(0, N, 2)
     logPhi[, 1] <- mvtnorm::dmvnorm(scoreMat,
@@ -304,10 +317,12 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,es
       }
     #-------------- Stop check  ----------------
     deltaTau <- max(abs(connectParamOld - theta$connectParam))
-    # deltaTau <- distTau(tauCurrent, qDist$tau)
+    #deltaTau <- distTau(tauCurrent, qDist$tau)
     connectParamOld <- theta$connectParam
 
-
+    if (currentOptions$verbosity == 2){
+      print(paste('nbBlocks=',nbBlocks,', iter=',iterVEM, ', LowerB=', round(J[2*iterVEM],4),', deltaParam= ',round(deltaTau,-log(currentOptions$valCritStop,10)),sep=''))
+    }
   }
   #------------------------------------------------------------
   #--------------  End of the algorithm

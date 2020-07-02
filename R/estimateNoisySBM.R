@@ -2,12 +2,14 @@
 #'
 #' \code{estimateNoisySBM} performs the estimation and model selection for the NoisySBM model.
 #' @param scoreList   :  list of Scores for each dyad  of an underlying network
-#' @param directed    :  if true the inference network is directed. Default value = FALSE.
+#' @param directed    :  Boolean. If true the inference network is directed. Default value = FALSE.
+#' @param nparm       : Boolean. If true then the emission distribution is Non Parametric (Default value FALSE)
+#' @param kerSigma  :  Plug-in bandwidth for non-parametric estimation. If not provided, will be  estimated with Hpi (up to six scores). Default value is null
 #' @param estimOptions : tunes the optimization process (see details below)
 #' @param monitoring : specifies if the lowerBound along the VEM iterations is saved (monitoring = list(lowerBound = TRUE))
 #' @details  The list of parameters \code{estimOptions} essentially tunes the optimization process and the variational EM algorithm, with the following parameters
 #'  \itemize{
-#'  \item{"verbosity"}{ controls the verbosity of the procedure (0 or 1). Default is 1.}
+#'  \item{"verbosity"}{ controls the verbosity of the procedure (0, 1 or 2). Default is 1.}
 #'  \item{"exploreFactor"}{ controls the exploration of the number of groups in the initialization step, Default is 1.5}
 #'  \item{"nbBlocksRange"}{ minimal and maximal number or blocks explored. Default is c(1,Inf)}
 #'  \item{"nbCores"}{ integer for number of cores used. Default is 1. }
@@ -21,7 +23,7 @@
 #' @return The output is a list of estimated models, each one corresponding to a number of blocks.
 #' @details Each element of the output list contains the following quantites:
 #'  \itemize{
-#'  \item{"theta"}{ estimated parameters}
+#'  \item{"theta"}{estimated parameters}
 #'  \item{"nbBlocks"}{ number of blocks in the underlying network}
 #'  \item{"qDist"}{ variational approximation of the the conditional distribution q(G,Z | data)}
 #'  \item{"ICL": }{Integrated Likelihood Criterion}
@@ -50,7 +52,7 @@
 #' @export
 
 
-estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, estimOptions=list(), monitoring = list()){
+estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = NULL, estimOptions=list(), monitoring = list()){
 
   currentOptions <- list(
     verbosity     = 1,
@@ -74,11 +76,12 @@ estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, estimOption
 
   #------------------------ transform Data
   nbScores <- length(scoreList)
-  scoreMat <- sapply(1:nbScores , function(q) {mat2Vect(scoreList[[q]], symmetric = !directed, diag = F)})
+  scoreMat <- scoreList2scoreMat(scoreList, symmetric= !directed)
 
   #--------------------------------- nparm model.
   if(nparm){
-    kerSigma <- Hpi(scoreMat)
+    if (currentOptions$verbosity > 0) { print("-------------- NP estim. : Computation  of the kernel----------- ")}
+    if (is.null(kerSigma)){kerSigma <- Hpi(scoreMat)}
     gram <- sapply(1:nrow(scoreMat), function(ij){dmvnorm(scoreMat, mean=scoreMat[ij, ], sigma=kerSigma)})
   }else{gram <- NULL}
 

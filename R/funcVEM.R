@@ -267,7 +267,8 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,es
     maxIterVEM = 1000,
     tauTol = 2 * .Machine$double.eps,
     valCritStop = 1e-6,
-    etaTol = 2 * .Machine$double.eps
+    etaTol = 2 * .Machine$double.eps,
+    verbosity = 0
   )
   currentOptions[names(estimOptions)] <- estimOptions
 

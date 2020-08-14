@@ -1,4 +1,4 @@
-veStepNoisySBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, epsilon_eta=epsilon_tau){
+veStepScoreSBM <- function(scoreMat, theta, tauOld, directed, epsilon_tau=1e-4, epsilon_eta=epsilon_tau){
 
   # theta <- thetaHat; epsilon_tau=1e-6; epsilon_eta=epsilon_tau; tauOld <- initDist$tau[[K]]
 

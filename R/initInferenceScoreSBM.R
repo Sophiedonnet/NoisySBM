@@ -34,10 +34,10 @@
 #' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
 #' emissionParam$edgeParam <- list( mean= 1:nbScores)
 #' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
-#' dataSim <- rNoisySBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
-#' init <- initInferenceNoisySBM(dataSim$noisyNetworks)
+#' dataSim <- rScoreSBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
+#' init <- initInferenceScoreSBM(dataSim$scoreNetworks)
 #' @export
-initInferenceNoisySBM <- function(scoreList, directed = FALSE, estimOptions = list()){
+initInferenceScoreSBM <- function(scoreList, directed = FALSE, estimOptions = list()){
 
   currentOptions <- list(
     explorFactor  = 1.5,

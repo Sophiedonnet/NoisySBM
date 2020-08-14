@@ -2,7 +2,7 @@
 # VE step of the VEM algorithm
 # TO KEEP: gradient formulas
 ###############################################################################
-veStepNoisySBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = list()){
+veStepScoreSBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = list()){
 
   # theta <- thetaHat; directed <- FALSE
   # epsilon_tau <- epsilon_eta <- 1e-4; tauOld <- qDist$tau
@@ -14,7 +14,7 @@ veStepNoisySBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = l
   )
   currentOptions[names(estimOptions)] <- estimOptions
   qDist <- qDistOld
-  lb <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+  lb <- lowerBoundScoreSBM(scoreMat,theta,qDist,directed)
   print(paste('   veOld', lb$lowerBound))
   # print(unlist(lb))
 
@@ -46,7 +46,7 @@ veStepNoisySBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = l
     eta[, k, l] <<- etaTmp[, 2]
   })}))
   lbOld <- lb
-  qDist$eta <- eta; lb <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+  qDist$eta <- eta; lb <- lowerBoundScoreSBM(scoreMat,theta,qDist,directed)
   print(paste('   eta  ', lb$lowerBound))
   # print(unlist(lb))
   if(lb$lowerBound < lbOld$lowerBound){browser()}
@@ -170,7 +170,7 @@ veStepNoisySBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = l
   # tau <- tau/rowSums(tau)
 
   qDist$tau <- tau
-  print(paste('   tau  ', lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound))
+  print(paste('   tau  ', lowerBoundScoreSBM(scoreMat,theta,qDist,directed)$lowerBound))
 
   #-----------------------------------------------------------------------------
   # psi
@@ -181,7 +181,7 @@ veStepNoisySBM <- function(scoreMat, theta, qDistOld, directed, estimOptions = l
   psi[, 1]  = 1 - psi[, 2]
 
   qDist$psi <- psi
-  print(paste('   psi  ', lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound))
+  print(paste('   psi  ', lowerBoundScoreSBM(scoreMat,theta,qDist,directed)$lowerBound))
 
   qDist <- list(eta = eta, tau = tau, psi = psi)
   return(qDist)

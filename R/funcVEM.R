@@ -1,7 +1,7 @@
 ###############################################################################
 # M step of the VEM algorithm
 ###############################################################################
-mStepNoisySBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
+mStepScoreSBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
 
   # scoreMat <- scoreMat; qDist <- qDist; directed <- FALSE
 
@@ -18,7 +18,7 @@ mStepNoisySBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
     connectParam[k, l] <<- tauVec %*% qDist$eta[, k, l] / sum(tauVec)
   })})
 
-  if(nparm){
+  if (nparm) {
     emissionParam <- list(noEdgeParam = list(weight = qDist$psi[, 1] / sum(qDist$psi[, 1])),
                           edgeParam = list(weight = qDist$psi[, 2] / sum(qDist$psi[, 2])))
   }else{
@@ -32,7 +32,7 @@ mStepNoisySBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
       Sigma[g, , ] <<- .5 * (Sigma[g, , ] + t(Sigma[g, , ]))
     })
     emissionParam <- list(noEdgeParam = list(mean = mu[1, ], var = Sigma[1, , ]),
-                          EdgeParam = list(mean = mu[2, ], var = Sigma[2, , ]))
+                          edgeParam = list(mean = mu[2, ], var = Sigma[2, , ]))
   }
 
   res <- list(blockProp = blockProp, connectParam = connectParam, emissionParam = emissionParam)
@@ -42,7 +42,7 @@ mStepNoisySBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
 ###############################################################################
 # VE step of the VEM algorithm
 ###############################################################################
-veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=NULL, estimOptions = list()){
+veStepScoreSBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=NULL, estimOptions = list()){
 
 
   # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
@@ -63,7 +63,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
 
 
   # log(phi)
-  if(nparm){
+  if (nparm) {
     options(matprod = 'internal')
     logPhi <- log(gram %*% cbind(theta$emission$noEdgeParam$weight, theta$emission$edgeParam$weight))
     u <- (logPhi != -Inf)
@@ -84,8 +84,8 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
                                     mean = theta$emissionParam$noEdgeParam$mean,
                                     sigma = theta$emissionParam$noEdgeParam$var, log = TRUE)
     logPhi[, 2] <- mvtnorm::dmvnorm(scoreMat,
-                                    mean = theta$emissionParam$EdgeParam$mean,
-                                    sigma = theta$emissionParam$EdgeParam$var, log = TRUE)
+                                    mean = theta$emissionParam$edgeParam$mean,
+                                    sigma = theta$emissionParam$edgeParam$var, log = TRUE)
   }
 
   # eta
@@ -101,7 +101,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
   # log(A)
   logA <- array(dim = c(N, nbBlocks, nbBlocks))
   sapply(1:nbBlocks, function(k){sapply(1:nbBlocks, function(l){ # k <- 1; l <- 2
-    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l] + (theta$connectParam[k,l] == 1)) + logPhi[, 1] - log(1-eta[,k,l])) +
+    logA[, k, l] <<- (1 - eta[, k, l])*(log(1 - theta$connectParam[k, l] + (theta$connectParam[k,l] == 1)) + logPhi[, 1] - log(1 - eta[,k,l])) +
       eta[, k, l]*(log(theta$connectParam[k, l] + (theta$connectParam[k,l] == 0)) + logPhi[, 2] -  log(eta[,k,l]))
     })})
 
@@ -110,7 +110,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
   tau <- tauOld
 
 
-  if (nbBlocks > 1){
+  if (nbBlocks > 1) {
     iterVE <- 0;  stopVE <- 0
     while ((iterVE < currentOptions$maxIterVE) & (stopVE == 0)) {
 
@@ -154,7 +154,7 @@ veStepNoisySBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
 ###############################################################################
 # Computation of the lowerbound
 ###############################################################################
-lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed, nparm=FALSE, gram=NULL){
+lowerBoundScoreSBM <- function(scoreMat,theta,qDist,directed, nparm=FALSE, gram=NULL){
 
 
   # scoreMat <- scoreMat; theta <- thetaHat; directed <- FALSE
@@ -187,8 +187,8 @@ lowerBoundNoisySBM <- function(scoreMat,theta,qDist,directed, nparm=FALSE, gram=
       mean = theta$emissionParam$noEdgeParam$mean,
       sigma = theta$emissionParam$noEdgeParam$var, log = TRUE)
     logPhi[, 2] <- mvtnorm::dmvnorm(scoreMat,
-      mean = theta$emissionParam$EdgeParam$mean,
-      sigma = theta$emissionParam$EdgeParam$var, log = TRUE)
+      mean = theta$emissionParam$edgeParam$mean,
+      sigma = theta$emissionParam$edgeParam$var, log = TRUE)
   }
 
 
@@ -259,7 +259,7 @@ distTau  <- function(tau,tauOld)
 #----------  VEM algorithm ----------------------------------------------------
 ###############################################################################
 
-VEMNoisySBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
+VEMScoreSBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
 
 
   currentOptions <- list(
@@ -302,19 +302,19 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,es
     tauCurrent <- qDist$tau
 
     #------------  M step ------------------
-    theta <- mStepNoisySBM(scoreMat = scoreMat, qDist = qDist, directed = directed, nparm=nparm, gram=gram)
+    theta <- mStepScoreSBM(scoreMat = scoreMat, qDist = qDist, directed = directed, nparm=nparm, gram=gram)
 
     if (monitoring$lowerBound) {
-      J[2*iterVEM - 1 ] =  lowerBoundNoisySBM(scoreMat = scoreMat,theta = theta,qDist = qDist,directed = directed, nparm=nparm, gram=gram)$lowerBound
+      J[2*iterVEM - 1 ] =  lowerBoundScoreSBM(scoreMat = scoreMat,theta = theta,qDist = qDist,directed = directed, nparm=nparm, gram=gram)$lowerBound
     }
 
     #-------------- VE step ----------------
     if (ncol(qDist$tau) > 1) {
-      qDist <- veStepNoisySBM(scoreMat = scoreMat, theta = theta,tauOld = qDist$tau, directed = directed, nparm=nparm, gram=gram,currentOptions)
+      qDist <- veStepScoreSBM(scoreMat = scoreMat, theta = theta,tauOld = qDist$tau, directed = directed, nparm=nparm, gram=gram,currentOptions)
     }
 
     if (monitoring$lowerBound) {
-      J[2*iterVEM] =  lowerBoundNoisySBM(scoreMat = scoreMat, theta = theta,qDist = qDist , directed = directed, nparm=nparm, gram=gram)$lowerBound
+      J[2*iterVEM] =  lowerBoundScoreSBM(scoreMat = scoreMat, theta = theta,qDist = qDist , directed = directed, nparm=nparm, gram=gram)$lowerBound
       }
     #-------------- Stop check  ----------------
     deltaTau <- max(abs(connectParamOld - theta$connectParam))
@@ -357,7 +357,7 @@ VEMNoisySBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,es
   pen  <- -0.5 * (pen1 + pen2 + pen3)
   #--- LOWER BOUND
 
-  LB   <- lowerBoundNoisySBM(scoreMat = scoreMat, theta = theta, qDist = qDist , directed = directed, nparm=nparm, gram=gram)
+  LB   <- lowerBoundScoreSBM(scoreMat = scoreMat, theta = theta, qDist = qDist , directed = directed, nparm=nparm, gram=gram)
   output$nbBlocks <- nbBlocks
   output$pen <- pen
   #--- ICL

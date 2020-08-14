@@ -1,13 +1,13 @@
-#' Simulate Noisy SBM
+#' Simulate Score SBM
 #'
-#' \code{rNoisyMBM} simulates a collection of networks which are noisy versions of un underlying network.  This network may be directed or not. See vignette for more informations
+#' \code{rScoreMBM} simulates a collection of networks which are score versions of un underlying network.  This network may be directed or not. See vignette for more informations
 #' @param  nbNodes        : number of nodes
 #' @param  directed      : directed or not (directed = TRUE or FALSE)
 #' @param  blockProp     : proportions of the Blocks. Vector of size nbBlocks
 #' @param  connectParam  : probabilities of connections inside and between blocks. Matrix of size nbBlocks.
-#' @param  emissionParam : parameters of the emission of the Noisy SBM. List of two terms : noEdgeParam and edgeParam. Each element is a list of means (vector or size nbScores) and variance matrix (square matrix of size nbScores)
+#' @param  emissionParam : parameters of the emission of the Score SBM. List of two terms : noEdgeParam and edgeParam. Each element is a list of means (vector or size nbScores) and variance matrix (square matrix of size nbScores)
 #' @param  seed          : set the seed for the random simulation (default value  = NULL)
-#' @return A list of containing the noisy networks (noisyNetworks a list of length nbScores of matrices of dimension nbNodes x nbNodes), the true underlying network (trueNetwork) and the clustering of the nodes (memberships)
+#' @return A list of containing the score networks (scoreNetworks a list of length nbScores of matrices of dimension nbNodes x nbNodes), the true underlying network (trueNetwork) and the clustering of the nodes (memberships)
 #' @examples
 #' nbNodes  <- 100
 #' directed <- TRUE
@@ -21,10 +21,10 @@
 #' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
 #' emissionParam$edgeParam <- list( mean= 1:nbScores)
 #' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
-#' dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
+#' dataSim <- rScoreSBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
 #'
 #' @export
-rNoisySBM = function(nbNodes,
+rScoreSBM = function(nbNodes,
   directed,
   blockProp,
   connectParam,
@@ -120,7 +120,7 @@ rNoisySBM = function(nbNodes,
 
   res = list(
     trueNetwork = G,
-    noisyNetworks = X,
+    scoreNetworks = X,
     memberships = t(Z)
   )
   return(res)

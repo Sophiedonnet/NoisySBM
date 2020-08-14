@@ -1,6 +1,6 @@
-#' Inference of the Noisy SBM  Model
+#' Inference of the Score SBM  Model
 #'
-#' \code{estimateNoisySBM} performs the estimation and model selection for the NoisySBM model.
+#' \code{estimateScoreSBM} performs the estimation and model selection for the ScoreSBM model.
 #' @param scoreList   :  list of Scores for each dyad  of an underlying network
 #' @param directed    :  Boolean. If true the inference network is directed. Default value = FALSE.
 #' @param nparm       : Boolean. If true then the emission distribution is Non Parametric (Default value FALSE)
@@ -43,16 +43,16 @@
 #' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
 #' emissionParam$edgeParam <- list( mean= 1:nbScores)
 #' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
-#' dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
-#' scoreList <- dataSim$noisyNetworks
-#' resEstim <- estimateNoisySBM(scoreList,directed)
+#' dataSim <- rScoreSBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
+#' scoreList <- dataSim$scoreNetworks
+#' resEstim <- estimateScoreSBM(scoreList,directed)
 #' @importFrom parallel mclapply
 #' @importFrom pbmcapply pbmclapply
 #' @importFrom mclust Mclust
 #' @export
 
 
-estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = NULL, estimOptions=list(), monitoring = list()){
+estimateScoreSBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = NULL, estimOptions=list(), monitoring = list()){
 
   currentOptions <- list(
     verbosity     = 1,
@@ -87,7 +87,7 @@ estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = 
 
   #--------------------------------- initialisation .
   if (currentOptions$verbosity > 0) { print("-------------- Initialization ----------- ")}
-  initAll <- initInferenceNoisySBM(scoreList, directed,currentOptions)
+  initAll <- initInferenceScoreSBM(scoreList, directed,currentOptions)
 
   #-------------------------------------------------------------------------
   #--------------------ESTIMATION ALL MODELS -------------------------------
@@ -106,7 +106,7 @@ estimateNoisySBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = 
     }
     init_m$tau = initAll$tau[[m]]
     init_m$eta = initAll$eta[[m]]
-    resVEM_m <- VEMNoisySBM(scoreMat=scoreMat, directed=directed, qDistInit=init_m, nparm=nparm, gram=gram, currentOptions,currentMonitoring)
+    resVEM_m <- VEMScoreSBM(scoreMat=scoreMat, directed=directed, qDistInit=init_m, nparm=nparm, gram=gram, currentOptions,currentMonitoring)
     if ((currentOptions$verbosity > 0 ) & (currentOptions$nbCores == 1)) {
       print(paste("ICL = ",resVEM_m$ICL,sep = ' '))
     }

@@ -1,4 +1,4 @@
-library(NoisySBM)
+library(ScoreSBM)
 nbNodes  = 60
 directed = TRUE
 blockProp = c(1/3,1/2,1/6)
@@ -8,17 +8,17 @@ connectParam <- 0.5*(connectParam + t(connectParam))
 emissionParam <- list()
 nbScores <- 4
 emissionParam$noEdgeParam = list(mean = rep(0,nbScores),var = diag(0.1,nrow = nbScores,ncol = nbScores))
-emissionParam$EdgeParam = list( mean = 1:nbScores,var =  diag(0.1,nrow = nbScores,ncol = nbScores))
-data1 <- rNoisySBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
+emissionParam$edgeParam = list( mean = 1:nbScores,var =  diag(0.1,nrow = nbScores,ncol = nbScores))
+data1 <- rScoreSBM(nbNodes,directed, blockProp,connectParam,emissionParam,seed = NULL)
 
 
 N <- nbNodes*(nbNodes - 1)*(0.5 + 0.5*directed)
-scoreList <- data1$noisyNetworks
+scoreList <- data1$scoreNetworks
 source('R/tools.R')
 scoreMat <- sapply(1:nbScores , function(q) {mat2Vect(scoreList[[q]], symmetric = !directed, diag = F)})
 
-
-initAll <- initInferenceNoisySBM(scoreList, directed)
+library(mclust)
+initAll <- initInferenceScoreSBM(scoreList, directed)
 nbModels <- length(initAll$tau)
 nbBlocksAll = vapply(1:nbModels,function(m){ncol(initAll$tau[[m]])},1)
 
@@ -34,14 +34,14 @@ qDist = list(tau = tauBestK,eta = etaBestK,psi = initAll$psi)
 
 
 source('R/funcVEM.R')
-theta <- mStepNoisySBM(scoreMat, qDist , directed)
-J1 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)
+theta <- mStepScoreSBM(scoreMat, qDist , directed)
+J1 <- lowerBoundScoreSBM(scoreMat,theta,qDist,directed)
 J1
 L1 <- J1$lowerBound
 # essai etap VE (1 iter)
 
-qDist <- veStepNoisySBM(scoreMat, theta,qDist$tau, directed)
-L2 <- lowerBoundNoisySBM(scoreMat,theta,qDist,directed)$lowerBound
+qDist <- veStepScoreSBM(scoreMat, theta,qDist$tau, directed)
+L2 <- lowerBoundScoreSBM(scoreMat,theta,qDist,directed)$lowerBound
 
 print(c(L1,L2))
 ##################################################################
@@ -51,13 +51,13 @@ initBestK <- list(psi = initAll$psi)
 initBestK$tau = initAll$tau[[bestK]]
 initBestK$eta = initAll$eta[[bestK]]
 init = initBestK
-resVEM <- VEMNoisySBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 100,maxIterVEM = 100))
+resVEM <- VEMScoreSBM(scoreMat, directed, init,monitoring = list(lowerBound = TRUE),estimOptions = list(verbosity = 0,maxIterVE = 100,maxIterVEM = 100))
 
-L <- lowerBoundNoisySBM(scoreMat,resVEM$theta,resVEM$qDist,directed)
+L <- lowerBoundScoreSBM(scoreMat,resVEM$theta,resVEM$qDist,directed)
 
 plot(resVEM$lowerBound,type = 'l')
 
 ##################################################################
 #--------------------- ESTIMATE ALL  -----------------------------
 ##################################################################
-res_ALL <- estimateNoisySBM(scoreList,directed)
+res_ALL <- estimateScoreSBM(scoreList,directed)

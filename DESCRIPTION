@@ -1,5 +1,5 @@
-Package: NoisySBM
-Title: Inference of a network topology from a one or several noisy versions of the network
+Package: ScoreSBM
+Title: Inference of a network topology from a one or several noisy version(s) of the network
 Version: 0.0.0.9000
 Authors@R: 
     person(given = "Sophie",
@@ -25,11 +25,11 @@ Imports:
     mvtnorm,
     pbmcapply
 Collate: 
-    'rNoisySBM.R' 
+    'rScoreSBM.R' 
     'tools.R' 
     'funcVEM.R'
     'mclustBIC.R'
-    'initInferenceNoisySBM.R'
-    'estimateNoisySBM.R'
+    'initInferenceScoreSBM.R'
+    'estimateScoreSBM.R'
 Suggests: 
     testthat (>= 2.1.0)

@@ -136,8 +136,8 @@ indices <- function(n, symmetric, diag=FALSE)
 #' emissionParam$noEdgeParam$var <- diag(0.1,nrow = nbScores,ncol = nbScores)
 #' emissionParam$edgeParam <- list( mean= 1:nbScores)
 #' emissionParam$edgeParam$var <-  diag(0.1,nrow = nbScores,ncol = nbScores)
-#' dataSim <- rNoisySBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
-#' S <- scoreList2scoreMat(dataSim$noisyNetworks , symmetric = FALSE)
+#' dataSim <- rScoreSBM(nbNodes,directed = TRUE, blockProp,connectParam,emissionParam,seed = NULL)
+#' S <- scoreList2scoreMat(dataSim$scoreNetworks , symmetric = FALSE)
 scoreList2scoreMat <- function(listScores,symmetric){
 
   S <- listScores

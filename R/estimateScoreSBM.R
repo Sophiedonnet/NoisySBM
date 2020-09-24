@@ -81,7 +81,7 @@ estimateScoreSBM = function(scoreList,directed = FALSE, nparm=FALSE, kerSigma = 
   #--------------------------------- nparm model.
   if(nparm){
     if (currentOptions$verbosity > 0) { print("-------------- NP estim. : Computation  of the kernel----------- ")}
-    if (is.null(kerSigma)){kerSigma <- Hpi(scoreMat)}
+    if (is.null(kerSigma)){kerSigma <- ifelse(nbScores >1, Hpi(scoreMat),hpi(scoreMat))}
     gram <- sapply(1:nrow(scoreMat), function(ij){dmvnorm(scoreMat, mean=scoreMat[ij, ], sigma=kerSigma)})
   }else{gram <- NULL}
 

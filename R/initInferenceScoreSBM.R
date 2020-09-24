@@ -60,6 +60,7 @@ initInferenceScoreSBM <- function(scoreList, directed = FALSE, estimOptions = li
   psi <- param_gm$z
   G <- param_gm$classification - 1
   mu  <- param_gm$parameters$mean
+  if (is.vector(mu)){mu = matrix(mu,1,2)}
   test_G <- rowMeans(t(mu)) #identify G = 0  and G =1
   if (test_G[1] > test_G[2]) {
     psi <- psi[,c(2,1)]

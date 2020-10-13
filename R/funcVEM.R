@@ -6,6 +6,7 @@ mStepScoreSBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
   # scoreMat <- scoreMat; qDist <- qDist; directed <- FALSE
 
   # Dimensions
+  if (is.vector(scoreMat)){scoreMat <- matrix(scoreMat, ncol=1)}
   d <- ncol(scoreMat); nbBlocks <- ncol(qDist$tau) #N <- nrow(scoreMat);
 
   # Proportions
@@ -33,6 +34,11 @@ mStepScoreSBM <- function(scoreMat, qDist, directed, nparm=FALSE, gram=NULL){
     })
     emissionParam <- list(noEdgeParam = list(mean = mu[1, ], var = Sigma[1, , ]),
                           edgeParam = list(mean = mu[2, ], var = Sigma[2, , ]))
+    if (d == 1){
+      emissionParam$noEdgeParam$var <- matrix(emissionParam$noEdgeParam$var,1,1)
+      emissionParam$edgeParam$var <- matrix(emissionParam$edgeParam$var,1,1)
+      }
+
   }
 
   res <- list(blockProp = blockProp, connectParam = connectParam, emissionParam = emissionParam)
@@ -58,6 +64,7 @@ veStepScoreSBM <- function(scoreMat, theta,tauOld, directed, nparm=FALSE, gram=N
   noConvergence = 0
   # Dimensions
   nbBlocks <- length(theta$blockProp);
+  nbScores <- ncol(scoreMat)
   N <- nrow(scoreMat); n <- nbPairs2n(N, symmetric = !directed)
   indexList <- indices(n, symmetric = !directed)
 
@@ -261,6 +268,7 @@ distTau  <- function(tau,tauOld)
 
 VEMScoreSBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,estimOptions = list(),monitoring = list(lowerBound = FALSE)){
 
+  if(is.vector(scoreMat)){scoreMat <- matrix(scoreMat,ncol=1)}
 
   currentOptions <- list(
     maxIterVE = 100 ,
@@ -283,6 +291,7 @@ VEMScoreSBM <- function(scoreMat, directed, qDistInit, nparm=FALSE, gram=NULL,es
   qDist = qDistInit
   nbNodes <- nrow(qDist$tau)
   nbBlocks <- ncol(qDist$tau)
+  if (is.vector(scoreMat)){scoreMat <- matrix(scoreMat,nocl=1)}
   nbDyads <- nrow(scoreMat)
   nbScores <- ncol(scoreMat)
   connectParamOld <- matrix(.5, nbBlocks, nbBlocks)

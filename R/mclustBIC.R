@@ -460,3 +460,27 @@ mclustBIC = function(data, G = NULL, modelNames = NULL, prior = NULL, control = 
             returnCodes = RET, class = "mclustBIC")
 }
 
+
+qclass = function (x, k)
+{
+  x <- as.vector(x)
+  eps <- sd(x) * sqrt(.Machine$double.eps)
+  q <- NA
+  n <- k
+  while (length(q) < (k + 1)) {
+    n <- n + 1
+    q <- unique(quantile(x, seq(from = 0, to = 1, length = n)))
+  }
+  if (length(q) > (k + 1)) {
+    dq <- diff(q)
+    nr <- length(q) - k - 1
+    q <- q[-order(dq)[1:nr]]
+  }
+  q[1] <- min(x) - eps
+  q[length(q)] <- max(x) + eps
+  cl <- rep(0, length(x))
+  for (i in 1:k) {
+    cl[x >= q[i] & x < q[i + 1]] <- i
+  }
+  return(cl)
+}
